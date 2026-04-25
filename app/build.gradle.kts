@@ -1,9 +1,54 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
+
+    val properties = Properties()
+    val gradlePropertiesFile = rootProject.file("gradle.properties")
+
+    if (gradlePropertiesFile.exists()) {
+        properties.load(gradlePropertiesFile.inputStream())
+    }
+
+    val localProperties = Properties()
+    val userGradleFile = File(System.getProperty("user.home"), ".gradle/gradle.properties")
+    if (userGradleFile.exists()) {
+        localProperties.load(userGradleFile.inputStream())
+    }
+
+    val storeFilePath = (localProperties.getProperty("RELEASE_STORE_FILE")
+        ?: properties.getProperty("RELEASE_STORE_FILE")) ?: ""
+    val storePasswordProp = (localProperties.getProperty("RELEASE_STORE_PASSWORD")
+        ?: properties.getProperty("RELEASE_STORE_PASSWORD")) ?: ""
+    val keyAliasProp = (localProperties.getProperty("RELEASE_KEY_ALIAS")
+        ?: properties.getProperty("RELEASE_KEY_ALIAS")) ?: ""
+    val keyPasswordProp = (localProperties.getProperty("RELEASE_KEY_PASSWORD")
+        ?: properties.getProperty("RELEASE_KEY_PASSWORD")) ?: ""
+
+    signingConfigs {
+        register("release") {
+            if (storeFilePath.isNotEmpty() &&
+                storePasswordProp.isNotEmpty() &&
+                keyAliasProp.isNotEmpty() &&
+                keyPasswordProp.isNotEmpty()
+            ) {
+                storeFile = file(storeFilePath)
+                storePassword = storePasswordProp
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+                enableV1Signing = true
+                enableV2Signing = true
+                println("Release signing has been configured: ${file(storeFilePath).absolutePath}")
+            } else {
+                println("Release signing credentials not found, using debug signature")
+            }
+        }
+    }
+
     namespace = "ru.ya.practicum.shopper"
     compileSdk {
         version = release(36) {
@@ -23,17 +68,21 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
