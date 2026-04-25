@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -14,6 +15,11 @@ android {
     if (gradlePropertiesFile.exists()) {
         properties.load(gradlePropertiesFile.inputStream())
     }
+
+    val keystoreBase64 = System.getenv("SIGNING_KEYSTORE_BASE64")
+    val storePasswordFromEnv = System.getenv("SIGNING_STORE_PASSWORD")
+    val keyAliasFromEnv = System.getenv("SIGNING_KEY_ALIAS")
+    val keyPasswordFromEnv = System.getenv("SIGNING_KEY_PASSWORD")
 
     val localProperties = Properties()
     val userGradleFile = File(System.getProperty("user.home"), ".gradle/gradle.properties")
@@ -32,20 +38,36 @@ android {
 
     signingConfigs {
         register("release") {
-            if (storeFilePath.isNotEmpty() &&
-                storePasswordProp.isNotEmpty() &&
-                keyAliasProp.isNotEmpty() &&
-                keyPasswordProp.isNotEmpty()
-            ) {
-                storeFile = file(storeFilePath)
-                storePassword = storePasswordProp
-                keyAlias = keyAliasProp
-                keyPassword = keyPasswordProp
-                enableV1Signing = true
-                enableV2Signing = true
-                println("Release signing has been configured: ${file(storeFilePath).absolutePath}")
+            val useCI = !keystoreBase64.isNullOrEmpty()
+
+            if (useCI) {
+                val keystoreBytes = Base64.getDecoder().decode(keystoreBase64)
+                val tempKeystoreFile = File.createTempFile("temp_keystore", ".jks")
+                tempKeystoreFile.deleteOnExit()
+                tempKeystoreFile.writeBytes(keystoreBytes)
+
+                storeFile = tempKeystoreFile
+                storePassword = storePasswordFromEnv ?: ""
+                keyAlias = keyAliasFromEnv ?: ""
+                keyPassword = keyPasswordFromEnv ?: ""
+
+                println("Release signing configured (from CI environment)")
             } else {
-                println("Release signing credentials not found, using debug signature")
+                if (storeFilePath.isNotEmpty() &&
+                    storePasswordProp.isNotEmpty() &&
+                    keyAliasProp.isNotEmpty() &&
+                    keyPasswordProp.isNotEmpty()
+                ) {
+                    storeFile = file(storeFilePath)
+                    storePassword = storePasswordProp
+                    keyAlias = keyAliasProp
+                    keyPassword = keyPasswordProp
+                    enableV1Signing = true
+                    enableV2Signing = true
+                    println("Release signing has been configured: ${file(storeFilePath).absolutePath}")
+                } else {
+                    println("Release signing credentials not found, using debug signature")
+                }
             }
         }
     }
