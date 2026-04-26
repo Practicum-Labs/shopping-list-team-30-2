@@ -17,8 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-const val ZERO_FIVE = 0.5f
+import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
 @Composable
 fun MainScreen(
@@ -65,7 +64,7 @@ fun MainScreen(
         FloatingActionButton(
             onClick = { },
 
-            modifier = Modifier.fillMaxWidth(ZERO_FIVE)
+            modifier = Modifier.fillMaxWidth(Dimens.ZERO_FIVE)
         ) {
             Text("+", fontSize = 32.sp)
         }

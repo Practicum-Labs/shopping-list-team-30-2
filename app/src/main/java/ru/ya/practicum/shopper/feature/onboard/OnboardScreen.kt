@@ -7,10 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import ru.ya.practicum.shopper.feature.onboard.components.OnboardContent
-
-const val AUTO_MAIN_SCREEN = 3000L
 
 @Composable
 fun OnboardScreen(
@@ -19,13 +16,6 @@ fun OnboardScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        delay(AUTO_MAIN_SCREEN)
-        if (!state.isNavigatingToMain) {
-            viewModel.onEvent(OnboardEvent.OnStartClicked)
-        }
-    }
 
     LaunchedEffect(state.isNavigatingToMain) {
         if (state.isNavigatingToMain) {
