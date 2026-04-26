@@ -15,8 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
 @Composable
@@ -26,7 +24,7 @@ fun MainScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(Dimens.dp16),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -35,14 +33,14 @@ fun MainScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(Dimens.dp32))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
+            elevation = CardDefaults.cardElevation(Dimens.dp4)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(Dimens.dp24),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -50,7 +48,7 @@ fun MainScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Dimens.dp16))
 
                 Text(
                     text = "Нажмите на кнопку + ниже, чтобы создать свой первый список",
@@ -66,7 +64,7 @@ fun MainScreen(
 
             modifier = Modifier.fillMaxWidth(Dimens.ZERO_FIVE)
         ) {
-            Text("+", fontSize = 32.sp)
+            Text("+", fontSize = Dimens.sp32)
         }
     }
 }
