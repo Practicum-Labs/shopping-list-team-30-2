@@ -1,4 +1,4 @@
-package ru.ya.practicum.shopper.ui.theme
+package ru.ya.practicum.shopper.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
