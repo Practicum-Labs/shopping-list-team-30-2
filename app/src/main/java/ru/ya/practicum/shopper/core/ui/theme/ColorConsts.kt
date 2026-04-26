@@ -1,4 +1,4 @@
-package ru.ya.practicum.shopper.ui.theme
+package ru.ya.practicum.shopper.core.ui.theme
 
 const val PURPLE_80_HEX = 0xFFD0BCFF
 const val PURPLE_GRAY_80_HEX = 0xFFCCC2DC

@@ -16,11 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
+import ru.ya.practicum.shopper.core.ui.theme.Theme
 import ru.ya.practicum.shopper.feature.main.MainScreen
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import ru.ya.practicum.shopper.feature.onboard.OnboardScreen
 import ru.ya.practicum.shopper.feature.onboard.OnboardViewModel
-import ru.ya.practicum.shopper.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
