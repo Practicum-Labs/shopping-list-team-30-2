@@ -20,6 +20,8 @@ object Dimens {
     val sp01 = 0.1.sp
     val sp015 = 0.15.sp
     val sp025 = 0.25.sp
+    val sp04 = 0.4.sp
+    val sp05 = 0.5.sp
     val sp12 = 12.sp
     val sp14 = 14.sp
     val sp16 = 16.sp
