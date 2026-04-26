@@ -7,41 +7,67 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import ru.ya.practicum.shopper.ui.theme.ShopperTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.first
+import ru.ya.practicum.shopper.feature.main.MainScreen
+import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
+import ru.ya.practicum.shopper.feature.onboard.OnboardScreen
+import ru.ya.practicum.shopper.feature.onboard.OnboardViewModel
+import ru.ya.practicum.shopper.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ShopperTheme {
+            Theme {
+                val dataStore = remember { OnboardDataStore(applicationContext) }
+                val isOnboardCompleted by produceState(initialValue = false) {
+                    value = dataStore.isOnboardCompleted.first()
+                }
+
+                var showOnboard by remember { mutableStateOf(!isOnboardCompleted) }
+
+                LaunchedEffect(isOnboardCompleted) {
+                    showOnboard = !isOnboardCompleted
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    if (showOnboard) {
+                        val viewModel: OnboardViewModel = viewModel(
+                            factory = OnboardViewModelFactory(dataStore)
+                        )
+                        OnboardScreen(
+                            viewModel = viewModel,
+                            onNavigateToMain = { showOnboard = false },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    } else {
+                        MainScreen(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ShopperTheme {
-        Greeting("Android")
+class OnboardViewModelFactory(
+    private val dataStore: OnboardDataStore
+) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(OnboardViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return OnboardViewModel(dataStore) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
