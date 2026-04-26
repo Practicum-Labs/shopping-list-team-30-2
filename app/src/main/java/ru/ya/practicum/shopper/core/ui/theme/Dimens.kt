@@ -8,10 +8,13 @@ object Dimens {
     const val AUTO_NAVIGATION_DELAY_MS = 3000L
 
     val dp4 = 4.dp
+    val dp8 = 8.dp
     val dp16 = 16.dp
     val dp24 = 24.dp
     val dp32 = 32.dp
     val dp38 = 38.dp
+    val dp48 = 48.dp
+    val dp94 = 94.dp
 
     val sp32 = 32.sp
 }
