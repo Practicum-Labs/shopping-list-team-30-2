@@ -1,10 +1,9 @@
 package ru.ya.practicum.shopper.core.ui.theme
 
 object ColorHex {
-    const val PURPLE_80_HEX = 0xFFD0BCFF
-    const val PURPLE_GRAY_80_HEX = 0xFFCCC2DC
-    const val PINK_80_HEX = 0xFFEFB8C8
-    const val PURPLE_40_HEX = 0xFF6650a4
-    const val PURPLE_GRAY_40_HEX = 0xFF625b71
-    const val PINK_40_HEX = 0xFF7D5260
+    const val PRIMARY_LIGHT_HEX = 0xFFD4C4B5
+    const val ON_PRIMARY_LIGHT_HEX = 0xFF211A14
+
+    const val PRIMARY_DARK_HEX = 0xFF19120C
+    const val ON_PRIMARY_DARK_HEX = 0XFFEEE0D5
 }

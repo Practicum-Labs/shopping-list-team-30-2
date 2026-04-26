@@ -2,9 +2,7 @@ package ru.ya.practicum.shopper.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(ColorHex.PURPLE_80_HEX)
-val PurpleGrey80 = Color(ColorHex.PURPLE_GRAY_80_HEX)
-val Pink80 = Color(ColorHex.PINK_80_HEX)
-val Purple40 = Color(ColorHex.PURPLE_40_HEX)
-val PurpleGrey40 = Color(ColorHex.PURPLE_GRAY_40_HEX)
-val Pink40 = Color(ColorHex.PINK_40_HEX)
+val PrimaryLight = Color(ColorHex.PRIMARY_LIGHT_HEX)
+val OnPrimaryLight = Color(ColorHex.ON_PRIMARY_LIGHT_HEX)
+val PrimaryDark = Color(ColorHex.PRIMARY_DARK_HEX)
+val OnPrimaryDark = Color(ColorHex.ON_PRIMARY_DARK_HEX)
