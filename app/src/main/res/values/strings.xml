@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Shopper</string>
+    <string name="onboard_body_title">Добро пожаловать в Список покупок!</string>
+    <string name="onboard_body_first_line">Создавайте списки, добавляйте товары,</string>
+    <string name="onboard_body_second_line">отмечайте, что уже куплено</string>
 </resources>
