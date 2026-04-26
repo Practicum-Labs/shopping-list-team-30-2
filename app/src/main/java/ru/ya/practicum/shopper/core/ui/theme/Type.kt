@@ -4,31 +4,55 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
 val Typography = Typography(
-    bodyLarge = TextStyle(
+    headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
+        fontSize = Dimens.sp24,
+        lineHeight = Dimens.sp32,
+        letterSpacing = Dimens.sp0
+    ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        fontSize = Dimens.sp22,
+        lineHeight = Dimens.sp28,
+        letterSpacing = Dimens.sp0
     ),
-    labelSmall = TextStyle(
+    titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontSize = Dimens.sp16,
+        lineHeight = Dimens.sp24,
+        letterSpacing = Dimens.sp015
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = Dimens.sp16,
+        lineHeight = Dimens.sp24,
+        letterSpacing = Dimens.sp05
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = Dimens.sp14,
+        lineHeight = Dimens.sp20,
+        letterSpacing = Dimens.sp025
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = Dimens.sp12,
+        lineHeight = Dimens.sp16,
+        letterSpacing = Dimens.sp04
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = Dimens.sp14,
+        lineHeight = Dimens.sp20,
+        letterSpacing = Dimens.sp01
     )
-    */
 )
