@@ -14,7 +14,7 @@ fun OnboardMsgFirstLine(
     Text(
         text = stringResource(R.string.onboard_body_first_line),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onPrimary,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
     )
 }

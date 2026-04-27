@@ -14,7 +14,7 @@ fun OnboardMsgTitle(
     Text(
         text = stringResource(R.string.onboard_body_title),
         style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onPrimary,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
     )
 }

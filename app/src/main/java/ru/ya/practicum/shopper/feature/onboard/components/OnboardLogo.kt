@@ -18,6 +18,6 @@ fun OnboardLogo(
         painter = painterResource(id = R.drawable.onb_logo),
         contentDescription = null,
         modifier = modifier.padding(horizontal = Dimens.dp38),
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary)
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
     )
 }
