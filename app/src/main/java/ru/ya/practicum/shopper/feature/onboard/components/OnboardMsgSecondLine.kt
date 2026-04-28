@@ -14,6 +14,7 @@ fun OnboardMsgSecondLine(
     Text(
         text = stringResource(R.string.onboard_body_second_line),
         style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
     )
 }
