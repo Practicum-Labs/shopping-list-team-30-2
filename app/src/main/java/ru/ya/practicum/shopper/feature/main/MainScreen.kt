@@ -9,18 +9,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier
 ) {
+    var bottomSheetIsOpen by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -55,6 +64,14 @@ fun MainScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+        if (bottomSheetIsOpen) {
+            IconsModalBottomSheet(
+                bottomSheetState = rememberModalBottomSheetState(
+                    skipPartiallyExpanded = true
+                ),
+                onDismissRequest = {},
+                onIconClick = {})
         }
 
         Spacer(modifier = Modifier.weight(1f))

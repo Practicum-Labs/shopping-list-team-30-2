@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="category_icons">
+        <item>@drawable/ic_shopping_cart</item>
+        <item>@drawable/ic_shopper</item>
+        <item>@drawable/ic_flower</item>
+        <item>@drawable/ic_tools</item>
+        <item>@drawable/ic_cracker</item>
+        <item>@drawable/ic_cake</item>
+        <item>@drawable/ic_present</item>
+        <item>@drawable/ic_bottle</item>
+        <item>@drawable/ic_pet</item>
+        <item>@drawable/ic_table</item>
+        <item>@drawable/ic_aid_kit</item>
+        <item>@drawable/ic_education</item>
+        <item>@drawable/ic_snowboard</item>
+        <item>@drawable/ic_home</item>
+        <item>@drawable/ic_weights</item>
+        <item>@drawable/ic_kid</item>
+        <item>@drawable/ic_game</item>
+        <item>@drawable/ic_paint</item>
+        <item>@drawable/ic_shirt</item>
+        <item>@drawable/ic_car</item>
+        <item>@drawable/ic_suitcase</item>
+        <item>@drawable/ic_aid_kit</item>
+        <item>@drawable/ic_selfcare</item>
+        <item>@drawable/ic_photocamera</item>
+        <item>@drawable/ic_book</item>
+        <item>@drawable/ic_yoga</item>
+        <item>@drawable/ic_puzzle</item>
+        <item>@drawable/ic_devices</item>
+        <item>@drawable/ic_carriage</item>
+        <item>@drawable/ic_list</item>
+    </array>
+</resources>
