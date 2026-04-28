@@ -12,11 +12,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldLabelPosition
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,6 +33,9 @@ import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 fun MainScreen(
     modifier: Modifier = Modifier
 ) {
+
+    var listName by remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -36,12 +43,66 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        OutlinedTextField(
+            value = listName,
+            onValueChange = { listName = it },
+            label = {
+                Text(
+                    "Название списка",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+//            labelPosition = TextFieldLabelPosition.Above(),
+            placeholder = {
+                Text(
+                    "Новый список",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = Dimens.F06)
+                )
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.tertiary
+            )
+        )
+
+        OutlinedTextField(
+            value = listName,
+            onValueChange = { listName = it },
+            label = {
+                Text(
+                    "Название списка",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+//            labelPosition = TextFieldLabelPosition.Above(),
+            placeholder = {
+                Text(
+                    "Новый список",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = Dimens.F06)
+                )
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.tertiary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
+                focusedLabelColor = MaterialTheme.colorScheme.tertiary,
+                cursorColor = MaterialTheme.colorScheme.tertiary
+            )
+        )
+
         Text(
             text = "Мои списки",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(modifier = Modifier.height(Dimens.dp32))
+
+
 
         Card(
             modifier = Modifier.fillMaxWidth(),
