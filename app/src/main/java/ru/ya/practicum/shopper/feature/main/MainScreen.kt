@@ -29,7 +29,6 @@ import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 fun MainScreen(
     modifier: Modifier = Modifier
 ) {
-    var bottomSheetIsOpen by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -65,23 +64,29 @@ fun MainScreen(
                 )
             }
         }
-        if (bottomSheetIsOpen) {
-            IconsModalBottomSheet(
-                bottomSheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = true
-                ),
-                onDismissRequest = {},
-                onIconClick = {})
-        }
-
+        ShowBottomSheet()
         Spacer(modifier = Modifier.weight(1f))
 
         FloatingActionButton(
             onClick = { },
-
             modifier = Modifier.fillMaxWidth(Dimens.ZERO_FIVE)
         ) {
             Text("+", fontSize = Dimens.sp32)
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowBottomSheet() {
+    var bottomSheetIsOpen by rememberSaveable { mutableStateOf(false) }
+
+    if (bottomSheetIsOpen) {
+        IconsModalBottomSheet(
+            bottomSheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = true
+            ),
+            onDismissRequest = {},
+            onIconClick = {})
     }
 }
