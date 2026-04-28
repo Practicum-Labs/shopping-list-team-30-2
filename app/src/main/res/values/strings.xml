@@ -3,4 +3,14 @@
     <string name="onboard_body_title">Добро пожаловать в Список покупок!</string>
     <string name="onboard_body_first_line">Создавайте списки, добавляйте товары,</string>
     <string name="onboard_body_second_line">отмечайте, что уже куплено</string>
+    <string name="main_title">Мои списки</string>
+    <string name="main_empty_title">У вас пока нет списков</string>
+    <string name="main_empty_subtitle">Нажмите на кнопку + ниже, чтобы создать \nсвой первый список</string>
+
+    contentDescription
+    <string name="cd_search">Поиск</string>
+    <string name="cd_delete">Удалить</string>
+    <string name="cd_theme">Сменить тему</string>
+    <string name="cd_add">Добавить список</string>
+
 </resources>
