@@ -15,17 +15,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Devices.PIXEL_6
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
-import ru.ya.practicum.shopper.core.ui.DefaultPreviewContainer
 
 private const val GRID_COLUMNS = 5
 
@@ -82,20 +78,7 @@ private fun BottomSheetDragHandle() {
             .padding(top = 16.dp)
             .width(32.dp)
             .height(4.dp)
-            .clip(RoundedCornerShape(100))
+            .clip(RoundedCornerShape(100.dp))
             .background(MaterialTheme.colorScheme.outline)
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, showSystemUi = true, device = PIXEL_6)
-@Composable
-private fun IconsModalBottomSheetPreview() {
-    DefaultPreviewContainer {
-        IconsModalBottomSheet(
-            bottomSheetState = rememberModalBottomSheetState(),
-            onDismissRequest = {},
-            onIconClick = {}
-        )
-    }
 }

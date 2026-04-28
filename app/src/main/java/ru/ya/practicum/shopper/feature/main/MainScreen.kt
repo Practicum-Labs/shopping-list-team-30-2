@@ -87,6 +87,7 @@ fun ShowBottomSheet() {
                 skipPartiallyExpanded = true
             ),
             onDismissRequest = {},
-            onIconClick = {})
+            onIconClick = {}
+        )
     }
 }
