@@ -6,7 +6,7 @@ import ru.ya.practicum.shopper.core.ui.DefaultPreviewContainer
 
 @Preview
 @Composable
-fun ScreenPreviewLight() {
+private fun ScreenPreviewLight() {
     DefaultPreviewContainer() {
         OnboardScreenContent(
             onStartClick = {}
@@ -16,7 +16,7 @@ fun ScreenPreviewLight() {
 
 @Preview
 @Composable
-fun ScreenPreviewLightDark() {
+private fun ScreenPreviewLightDark() {
     DefaultPreviewContainer(
         darkTheme = true
     ) {
