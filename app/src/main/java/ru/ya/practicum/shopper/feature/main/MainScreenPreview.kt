@@ -38,7 +38,7 @@ private fun MainScreenPreviewDark() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun IconsModalBottomSheetPreviewLight() {
+private fun IconsModalBottomSheetPreviewLight() {
     Theme(darkTheme = false) {
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
@@ -55,7 +55,7 @@ fun IconsModalBottomSheetPreviewLight() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun IconsModalBottomSheetPreviewDark() {
+private fun IconsModalBottomSheetPreviewDark() {
     Theme(darkTheme = true) {
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
