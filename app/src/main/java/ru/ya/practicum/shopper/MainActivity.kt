@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Scaffold(
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     modifier = Modifier
                         .fillMaxSize()
                 ) { innerPadding ->
