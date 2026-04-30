@@ -10,7 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.DefaultPreviewContainer
+import ru.ya.practicum.shopper.feature.main.components.ShoppingListCard
+import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
 import ru.ya.practicum.shopper.core.ui.theme.Theme
 import ru.ya.practicum.shopper.feature.main.components.IconView
 import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
@@ -98,5 +101,72 @@ private fun IconDark() {
                 icon = R.drawable.ic_pet
             )
         }
+    }
+}
+
+private val previewList = listOf(
+    ShoppingList(
+        id = 1,
+        name = "Авто",
+        iconResId = R.drawable.ic_car,
+    ),
+    ShoppingList(
+        id = 2,
+        name = "Мото",
+        iconResId = R.drawable.ic_aid_kit,
+    ),
+    ShoppingList(
+        id = 3,
+        name = "Вело",
+        iconResId = R.drawable.ic_cracker,
+    ),
+    ShoppingList(
+        id = 4,
+        name = "Фото",
+        iconResId = R.drawable.ic_photocamera,
+    )
+)
+
+@Preview
+@Composable
+private fun ShoppingListsContentPreviewLight() {
+    Theme(darkTheme = false) {
+        ShoppingListsContent(
+            lists = previewList,
+            onListClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ShoppingListsContentPreviewDark() {
+    Theme(darkTheme = true) {
+        ShoppingListsContent(
+            lists = previewList,
+            onListClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ShoppingListCardPreviewLight() {
+    Theme(darkTheme = false) {
+        ShoppingListCard(
+            shoppingList = previewList.first(),
+            onClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ShoppingListCardPreviewDark() {
+    Theme(darkTheme = true) {
+        ShoppingListCard(
+            shoppingList = previewList.first(),
+            onClick = {}
+        )
     }
 }
