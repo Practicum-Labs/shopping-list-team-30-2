@@ -1,4 +1,4 @@
-package ru.ya.practicum.shopper.feature.main
+package ru.ya.practicum.shopper.feature.product
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,36 +8,38 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
-import ru.ya.practicum.shopper.feature.main.components.MainCreateList
-import ru.ya.practicum.shopper.feature.main.components.MainEmptyContent
-import ru.ya.practicum.shopper.feature.main.components.MainTopBar
+import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
+import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
+import ru.ya.practicum.shopper.feature.product.components.ProductTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
+fun ProductScreen(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            MainTopBar(
-                onSearchClick = { },
-                onDeleteClick = { },
-                onThemeClick = { }
+            ProductTopBar(
+                title = stringResource(R.string.product_title),
+                onBackClick = { },
+                onMenuClick = { }
             )
         },
         floatingActionButton = {
-            MainCreateList(onClick = { })
+            ProductCreateItem(onClick = { })
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
-        MainEmptyContent(
+        ProductEmptyContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = Dimens.dp16),
+                .padding(horizontal = Dimens.dp16)
         )
     }
 }
