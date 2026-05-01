@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.DefaultPreviewContainer
-import ru.ya.practicum.shopper.feature.main.components.ShoppingListCard
-import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
 import ru.ya.practicum.shopper.core.ui.theme.Theme
 import ru.ya.practicum.shopper.feature.main.components.IconView
 import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
+import ru.ya.practicum.shopper.feature.main.components.ShoppingListCard
+import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
 
 @Preview
 @Composable
