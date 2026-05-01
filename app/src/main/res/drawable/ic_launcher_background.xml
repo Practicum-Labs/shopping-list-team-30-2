@@ -18,7 +18,7 @@
         <path
             android:pathData="M0,0h270.93v270.93h-270.93z"
             android:strokeWidth="0.266706"
-            android:fillColor="#FFDCBB"/>
+            android:fillColor="@color/ic_launcher_background"/>
       </group>
     </group>
   </group>
