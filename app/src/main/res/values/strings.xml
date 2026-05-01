@@ -9,9 +9,6 @@
     <string name="product_empty_title">В списке покупок пока пусто</string>
     <string name="product_empty_subtitle">Нажмите на кнопку + ниже, \nчтобы добавить товары</string>
     <string name="product_title">Продукты</string>
-
-
-    contentDescription
     <string name="cd_search">Поиск</string>
     <string name="cd_delete">Удалить</string>
     <string name="cd_theme">Сменить тему</string>

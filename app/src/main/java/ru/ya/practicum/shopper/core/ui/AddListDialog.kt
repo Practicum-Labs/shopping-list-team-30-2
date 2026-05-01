@@ -57,7 +57,7 @@ fun AddListDialog(
                     .padding(24.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.add_list),
+                    text = stringResource(R.string.cd_add),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -130,7 +130,7 @@ fun AddListDialog(
     }
 }
 
-@Preview
+@Preview(showSystemUi = true, showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable
 private fun AddListDialogLightPreview() {
     Theme(darkTheme = false) {
@@ -141,7 +141,7 @@ private fun AddListDialogLightPreview() {
     }
 }
 
-@Preview
+@Preview(device = "spec:width=411dp,height=891dp", showSystemUi = true, showBackground = true)
 @Composable
 private fun AddListDialogDarkPreview() {
     Theme(darkTheme = true) {
