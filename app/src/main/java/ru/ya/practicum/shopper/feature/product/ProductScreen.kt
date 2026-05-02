@@ -82,7 +82,7 @@ fun ProductScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = Dimens.dp16)
+
             )
         }
     }
