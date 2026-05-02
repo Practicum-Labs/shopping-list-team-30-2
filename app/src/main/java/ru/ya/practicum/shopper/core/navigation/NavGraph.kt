@@ -1,11 +1,16 @@
 package ru.ya.practicum.shopper.core.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.flow.first
 import ru.ya.practicum.shopper.feature.main.MainScreen
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import ru.ya.practicum.shopper.feature.onboard.OnboardScreen
@@ -35,12 +41,18 @@ fun NavGraph(
     startDestination: String = Screen.Onboard.route
 ) {
     val navController = rememberNavController()
+
+    var isLoading by remember { mutableStateOf(true) }
     var isOnboardCompleted by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        dataStore.isOnboardCompleted.collect { completed ->
-            isOnboardCompleted = completed
-        }
+        isOnboardCompleted = dataStore.isOnboardCompleted.first()
+        isLoading = false
+    }
+
+    if (isLoading) {
+        LoadingScreen()
+        return
     }
 
     AppNavHost(
@@ -111,5 +123,15 @@ class OnboardViewModelFactory(
             return OnboardViewModel(dataStore) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+@Composable
+fun LoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }
