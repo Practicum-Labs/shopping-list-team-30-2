@@ -7,39 +7,83 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
+import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
 import ru.ya.practicum.shopper.feature.product.components.ProductTopBar
 
+val tmpList = listOf(
+    ru.ya.practicum.shopper.core.model.Product(
+        id = 1,
+        name = "Молоко",
+        amount = "1",
+        unit = "л",
+        isBought = false
+    ),
+    ru.ya.practicum.shopper.core.model.Product(
+        id = 2,
+        name = "Хлеб",
+        amount = "2",
+        unit = "шт",
+        isBought = false
+    )
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UnusedParameter") // Подавлено на текущий момент не требуется
 @Composable
 fun ProductScreen(
+    listId: Int,
+    listName: String,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showAddProductDialog by remember { mutableStateOf(false) }
+
+    // Временные данные для демонстрации
+    val products = remember {
+        tmpList
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             ProductTopBar(
-                title = stringResource(R.string.product_title),
-                onBackClick = { },
+                title = listName,
+                onBackClick = onBackClick,
                 onMenuClick = { }
             )
         },
         floatingActionButton = {
-            ProductCreateItem(onClick = { })
+            ProductCreateItem(onClick = { showAddProductDialog = true })
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
-        ProductEmptyContent(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = Dimens.dp16)
-        )
+        if (products.isEmpty()) {
+            ProductEmptyContent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = Dimens.dp16)
+            )
+        } else {
+            ProductItemsContent(
+                products = products,
+                onItemClick = { product ->
+                    {}
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = Dimens.dp16)
+            )
+        }
     }
 }
