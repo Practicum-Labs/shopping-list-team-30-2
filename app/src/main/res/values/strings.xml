@@ -16,5 +16,12 @@
     <string name="cd_back">Назад</string>
     <string name="cd_menu">Меню</string>
     <string name="cd_add_product">Добавить товар</string>
+    <string name="add_list">Добавление списка</string>
+    <string name="rename_list">Переименовывание списка</string>
+    <string name="list_title">Название списка</string>
+    <string name="new_list">Новый список</string>
+    <string name="cancel_button_text">Отмена</string>
+    <string name="create_button_text">Создать</string>
+
 
 </resources>

@@ -1,6 +1,5 @@
 package ru.ya.practicum.shopper.core.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,7 +34,7 @@ import ru.ya.practicum.shopper.core.ui.components.buttons.PlainButton
 import ru.ya.practicum.shopper.core.ui.theme.Theme
 
 @Composable
-fun AddListDialog(
+fun RenameListDialog(
     onDismiss: () -> Unit,
     onCreate: (listName: String) -> Unit
 ) {
@@ -60,8 +57,6 @@ fun AddListDialog(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DialogHeader()
-                Spacer(modifier = Modifier.height(16.dp))
                 DialogTitle()
                 Spacer(modifier = Modifier.height(24.dp))
                 ListNameTextField(
@@ -79,24 +74,12 @@ fun AddListDialog(
 }
 
 @Composable
-private fun DialogHeader() {
-    Image(
-        modifier = Modifier
-            .width(18.dp)
-            .height(18.dp),
-        painter = painterResource(id = R.drawable.ic_add_on),
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
-        contentDescription = null,
-    )
-}
-
-@Composable
 private fun DialogTitle() {
     Text(
-        text = stringResource(R.string.add_list),
+        text = stringResource(R.string.rename_list),
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface,
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
@@ -160,7 +143,7 @@ private fun DialogButtons(
 @Composable
 private fun AddListDialogLightPreview() {
     Theme(darkTheme = false) {
-        AddListDialog(
+        RenameListDialog(
             onDismiss = {},
             onCreate = {}
         )
@@ -171,7 +154,7 @@ private fun AddListDialogLightPreview() {
 @Composable
 private fun AddListDialogDarkPreview() {
     Theme(darkTheme = true) {
-        AddListDialog(
+        RenameListDialog(
             onDismiss = {},
             onCreate = {}
         )
