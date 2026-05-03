@@ -32,7 +32,7 @@ fun ProductItemCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         ProductItem(product, onItemClick)
     }
@@ -91,7 +91,6 @@ fun ProductItem(
         }
     }
     HorizontalDivider(
-        modifier = Modifier.padding(horizontal = Dimens.dp16),
         thickness = 1.dp,
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     )

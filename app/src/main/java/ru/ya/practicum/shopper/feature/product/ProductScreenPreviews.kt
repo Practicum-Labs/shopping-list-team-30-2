@@ -12,7 +12,11 @@ import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
 @Composable
 private fun ProductScreenPreviewLight() {
     DefaultPreviewContainer(darkTheme = false) {
-        ProductScreen()
+        ProductScreen(
+            listId = 1,
+            listName = "Продукты",
+            onBackClick = {}
+        )
     }
 }
 
@@ -20,7 +24,11 @@ private fun ProductScreenPreviewLight() {
 @Composable
 private fun ProductScreenPreviewDark() {
     DefaultPreviewContainer(darkTheme = true) {
-        ProductScreen()
+        ProductScreen(
+            listId = 1,
+            listName = "Продукты",
+            onBackClick = {}
+        )
     }
 }
 

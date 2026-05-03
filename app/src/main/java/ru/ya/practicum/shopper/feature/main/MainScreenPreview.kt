@@ -24,7 +24,9 @@ private fun MainScreenPreviewLight() {
     DefaultPreviewContainer(
         darkTheme = false
     ) {
-        MainScreen()
+        MainScreen(
+            onNavigateToProduct = { _, _ -> }
+        )
     }
 }
 
@@ -34,12 +36,14 @@ private fun MainScreenPreviewDark() {
     DefaultPreviewContainer(
         darkTheme = true
     ) {
-        MainScreen()
+        MainScreen(
+            onNavigateToProduct = { _, _ -> }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
+@Preview(device = "spec:width=411dp,height=891dp", showSystemUi = true, showBackground = true)
 @Composable
 private fun IconsModalBottomSheetPreviewLight() {
     Theme(darkTheme = false) {
@@ -56,7 +60,7 @@ private fun IconsModalBottomSheetPreviewLight() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
+@Preview(device = "spec:width=411dp,height=891dp", showSystemUi = true, showBackground = true)
 @Composable
 private fun IconsModalBottomSheetPreviewDark() {
     Theme(darkTheme = true) {
