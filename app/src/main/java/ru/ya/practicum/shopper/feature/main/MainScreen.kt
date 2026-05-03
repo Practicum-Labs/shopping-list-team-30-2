@@ -1,5 +1,6 @@
 package ru.ya.practicum.shopper.feature.main
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -8,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,10 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.compose.koinInject
+import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.AddListDialog
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
+import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 import ru.ya.practicum.shopper.feature.main.components.MainCreateList
 import ru.ya.practicum.shopper.feature.main.components.MainEmptyContent
 import ru.ya.practicum.shopper.feature.main.components.MainTopBar
@@ -76,6 +80,8 @@ private fun MainScreenContent(
     onEvent: (MainEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -95,7 +101,22 @@ private fun MainScreenContent(
         MainScreenBody(
             state = state,
             innerPadding = innerPadding,
-            onNavigateToProduct = onNavigateToProduct
+            onNavigateToProduct = onNavigateToProduct,
+            onListIconClick = { shoppingList ->
+                onEvent(MainEvent.ShowIconPickerForList(shoppingList.id))
+            }
+        )
+    }
+
+    if (state.showIconPicker && state.editingListId != null) {
+        IconsModalBottomSheet(
+            bottomSheetState = sheetState,
+            onDismissRequest = { onEvent(MainEvent.HideIconPicker) },
+            onIconClick = { iconResId ->
+                state.editingListId?.let { listId ->
+                    onEvent(MainEvent.UpdateListIcon(listId, iconResId))
+                }
+            }
         )
     }
 
@@ -117,14 +138,12 @@ private fun MainScreenContent(
 @Composable
 private fun MainScreenBody(
     state: MainState,
-    innerPadding: androidx.compose.foundation.layout.PaddingValues,
-    onNavigateToProduct: (listId: Int, listName: String) -> Unit
+    innerPadding: PaddingValues,
+    onNavigateToProduct: (listId: Int, listName: String) -> Unit,
+    onListIconClick: (ShoppingList) -> Unit
 ) {
     when {
-        state.isLoading -> {
-            // Можно добавить индикатор загрузки
-        }
-
+        state.isLoading -> {}
         state.lists.isEmpty() -> {
             MainEmptyContent(
                 modifier = Modifier
@@ -140,6 +159,7 @@ private fun MainScreenBody(
                 onListClick = { shoppingList ->
                     onNavigateToProduct(shoppingList.id, shoppingList.name)
                 },
+                onListIconClick = onListIconClick,
                 modifier = Modifier.padding(innerPadding)
             )
         }

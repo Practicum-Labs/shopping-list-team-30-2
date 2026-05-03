@@ -23,7 +23,9 @@ data class MainState(
     val showAddDialog: Boolean = false,
     val showIconPicker: Boolean = false,
     val selectedIconId: Int = 0,
-    val newListName: String = ""
+    val newListName: String = "",
+    val editingListId: Int? = null
+
 )
 
 sealed class MainEvent {
@@ -37,6 +39,8 @@ sealed class MainEvent {
     data class SelectIcon(val iconId: Int) : MainEvent()
     data class UpdateNewListName(val name: String) : MainEvent()
     object LoadLists : MainEvent()
+    data class UpdateListIcon(val listId: Int, val newIconId: Int) : MainEvent()
+    data class ShowIconPickerForList(val listId: Int) : MainEvent()
 }
 
 @Suppress("TooManyFunctions", "UnusedPrivateProperty") // Подавлено
@@ -64,6 +68,31 @@ class MainViewModel(
             is MainEvent.SelectIcon -> selectIcon(event.iconId)
             is MainEvent.UpdateNewListName -> updateNewListName(event.name)
             MainEvent.LoadLists -> loadLists()
+            is MainEvent.UpdateListIcon -> updateListIcon(event.listId, event.newIconId)
+            is MainEvent.ShowIconPickerForList -> showIconPickerForList(event.listId)
+        }
+    }
+
+    private fun showIconPickerForList(listId: Int) {
+        _state.update { it.copy(showIconPicker = true, editingListId = listId) }
+    }
+
+    private fun updateListIcon(listId: Int, newIconId: Int) {
+        viewModelScope.launch {
+            try {
+                val existingList = listRepository.getShopperListById(listId)
+                if (existingList != null) {
+                    val updatedList = existingList.copy(iconId = newIconId)
+                    listRepository.updateShopperList(updatedList)
+                }
+                _state.update { it.copy(showIconPicker = false, editingListId = null) }
+            } catch (e: SQLException) {
+                _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
+            } catch (e: IOException) {
+                _state.update { it.copy(error = "Ошибка ввода-вывода: ${e.message}") }
+            } catch (e: IllegalStateException) {
+                _state.update { it.copy(error = "Ошибка состояния: ${e.message}") }
+            }
         }
     }
 

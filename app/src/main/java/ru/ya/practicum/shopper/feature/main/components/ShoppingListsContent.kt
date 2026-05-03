@@ -14,6 +14,7 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 fun ShoppingListsContent(
     lists: List<ShoppingList>,
     onListClick: (ShoppingList) -> Unit,
+    onListIconClick: ((ShoppingList) -> Unit)? = null, // Добавь колбэк
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.dp16)
 ) {
@@ -28,7 +29,8 @@ fun ShoppingListsContent(
         ) { shoppingList ->
             ShoppingListCard(
                 shoppingList = shoppingList,
-                onClick = onListClick
+                onClick = onListClick,
+                onIconClick = onListIconClick
             )
         }
     }

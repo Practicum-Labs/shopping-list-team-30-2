@@ -32,6 +32,7 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 fun ShoppingListCard(
     shoppingList: ShoppingList,
     onClick: (ShoppingList) -> Unit,
+    onIconClick: ((ShoppingList) -> Unit)? = null, // Добавь колбэк для клика по иконке
     modifier: Modifier = Modifier
 ) {
     val iconResId = getValidIconResId(shoppingList.iconResId)
@@ -50,7 +51,8 @@ fun ShoppingListCard(
         ShoppingListCardContent(
             shoppingList = shoppingList,
             iconResId = iconResId,
-            onClick = onClick
+            onClick = onClick,
+            onIconClick = onIconClick
         )
     }
 }
@@ -59,7 +61,8 @@ fun ShoppingListCard(
 private fun ShoppingListCardContent(
     shoppingList: ShoppingList,
     iconResId: Int,
-    onClick: (ShoppingList) -> Unit
+    onClick: (ShoppingList) -> Unit,
+    onIconClick: ((ShoppingList) -> Unit)?
 ) {
     Row(
         modifier = Modifier
@@ -70,20 +73,30 @@ private fun ShoppingListCardContent(
             .padding(Dimens.dp8),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        ListIcon(iconResId = iconResId)
+        ListIcon(
+            iconResId = iconResId,
+            onIconClick = onIconClick?.let { { it(shoppingList) } }
+        )
         Spacer(modifier = Modifier.width(Dimens.dp16))
         ListName(name = shoppingList.name)
     }
 }
 
 @Composable
-private fun ListIcon(iconResId: Int) {
+private fun ListIcon(
+    iconResId: Int,
+    onIconClick: (() -> Unit)? = null
+) {
     Box(
         modifier = Modifier
             .size(40.dp)
             .background(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = CircleShape
+            )
+            .then(
+                if (onIconClick != null) Modifier.clickable { onIconClick() }
+                else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
