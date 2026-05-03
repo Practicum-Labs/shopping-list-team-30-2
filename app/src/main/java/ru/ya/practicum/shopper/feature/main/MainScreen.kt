@@ -108,6 +108,20 @@ private fun MainScreenContent(
         )
     }
 
+    MainScreenDialogs(
+        state = state,
+        sheetState = sheetState,
+        onEvent = onEvent
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenDialogs(
+    state: MainState,
+    sheetState: androidx.compose.material3.SheetState,
+    onEvent: (MainEvent) -> Unit
+) {
     if (state.showIconPicker && state.editingListId != null) {
         IconsModalBottomSheet(
             bottomSheetState = sheetState,
@@ -152,7 +166,6 @@ private fun MainScreenBody(
                     .padding(horizontal = Dimens.dp16),
             )
         }
-
         else -> {
             ShoppingListsContent(
                 lists = state.lists,

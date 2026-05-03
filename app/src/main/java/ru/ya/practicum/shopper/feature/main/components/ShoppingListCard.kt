@@ -95,8 +95,11 @@ private fun ListIcon(
                 shape = CircleShape
             )
             .then(
-                if (onIconClick != null) Modifier.clickable { onIconClick() }
-                else Modifier
+                if (onIconClick != null) {
+                    Modifier.clickable { onIconClick() }
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
