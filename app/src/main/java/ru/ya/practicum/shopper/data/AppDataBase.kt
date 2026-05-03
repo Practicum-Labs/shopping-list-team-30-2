@@ -9,7 +9,7 @@ import ru.ya.practicum.shopper.data.local.entity.ShopperListsEntity
 
 @Database(
     entities = [ShopperListsEntity::class, ShopperItemEntity::class],
-    version = 0
+    version = 1
 )
 abstract class AppDataBase : RoomDatabase() {
     abstract fun shopperListsDao(): ShopperListsDao

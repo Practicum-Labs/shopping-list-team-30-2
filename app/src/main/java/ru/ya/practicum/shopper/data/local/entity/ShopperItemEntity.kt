@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
             entity = ShopperListsEntity::class,
             parentColumns = ["id"],
             childColumns = ["listId"],
-            onDelete = ForeignKey.CASCADE // за удалением списка следует удаление товаров
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index("listId")]
@@ -20,12 +20,12 @@ import androidx.room.PrimaryKey
 data class ShopperItemEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val listId: Int, // к какому списку относимся
-    val name: String, // название продукта
-    val unit: String? = null, // "кг", "шт", "л" и т.д.
-    val value: Float? = null, // количество
-    val isBought: Boolean = false, // купили ли
-    val position: Int = 0 // для drag & drop
+    val listId: Int,
+    val name: String,
+    val unit: String? = null,
+    val value: Float? = null,
+    val isBought: Boolean = false,
+    val position: Int = 0
 ) {
     companion object {
         const val TABLE_NAME = "shopper_items"
