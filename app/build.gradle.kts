@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -129,6 +130,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.koin)
     implementation(libs.koin.androidx.compose)
+
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

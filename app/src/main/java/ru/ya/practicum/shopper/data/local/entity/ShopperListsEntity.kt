@@ -7,9 +7,9 @@ import androidx.room.PrimaryKey
 data class ShopperListsEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val name: String, // Название списка
-    val iconId: Int, // Id выбранной иконки
-    val insertTime: Long = System.currentTimeMillis(), // Время добавления в базу данных
+    val name: String,
+    val iconId: Int,
+    val insertTime: Long = System.currentTimeMillis(),
 ) {
     companion object {
         const val TABLE_NAME = "shopper_lists"

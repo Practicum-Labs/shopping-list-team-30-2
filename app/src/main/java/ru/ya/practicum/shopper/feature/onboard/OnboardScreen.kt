@@ -2,6 +2,8 @@ package ru.ya.practicum.shopper.feature.onboard
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,9 +36,14 @@ fun OnboardScreenContent(
     onStartClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OnboardContent(
-        modifier = modifier
-            .fillMaxSize()
-            .clickable { onStartClick() }
-    )
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        OnboardContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { onStartClick() }
+        )
+    }
 }

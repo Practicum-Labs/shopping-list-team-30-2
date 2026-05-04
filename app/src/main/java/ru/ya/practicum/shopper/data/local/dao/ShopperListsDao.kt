@@ -13,12 +13,18 @@ interface ShopperListsDao {
     @Query("SELECT * FROM ${ShopperListsEntity.TABLE_NAME} ORDER BY insertTime DESC")
     fun getAllLists(): Flow<List<ShopperListsEntity>>
 
+    @Query("SELECT * FROM ${ShopperListsEntity.TABLE_NAME} WHERE id = :id")
+    suspend fun getListById(id: Int): ShopperListsEntity?
+
     @Insert
     suspend fun insert(list: ShopperListsEntity): Long
+
     @Update
     suspend fun update(list: ShopperListsEntity)
+
     @Delete
     suspend fun delete(list: ShopperListsEntity)
+
     @Query("DELETE FROM ${ShopperListsEntity.TABLE_NAME} WHERE id = :id")
     suspend fun deleteById(id: Int)
 }
