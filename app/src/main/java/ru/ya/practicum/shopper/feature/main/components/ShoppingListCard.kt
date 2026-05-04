@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
@@ -31,12 +32,13 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 fun ShoppingListCard(
     shoppingList: ShoppingList,
     onClick: (ShoppingList) -> Unit,
+    onIconClick: ((ShoppingList) -> Unit)? = null, // Добавь колбэк для клика по иконке
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth(),
+    val iconResId = getValidIconResId(shoppingList.iconResId)
 
+    Card(
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimens.dp12),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -46,41 +48,81 @@ fun ShoppingListCard(
             pressedElevation = 3.dp
         )
     ) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.dp16))
-                .background(MaterialTheme.colorScheme.inverseOnSurface)
-                .clickable { onClick(shoppingList) }
-                .padding(Dimens.dp8),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = shoppingList.iconResId),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondaryContainer),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(Dimens.dp16))
-
-            Column {
-                Text(
-                    text = shoppingList.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
+        ShoppingListCardContent(
+            shoppingList = shoppingList,
+            iconResId = iconResId,
+            onClick = onClick,
+            onIconClick = onIconClick
+        )
     }
+}
+
+@Composable
+private fun ShoppingListCardContent(
+    shoppingList: ShoppingList,
+    iconResId: Int,
+    onClick: (ShoppingList) -> Unit,
+    onIconClick: ((ShoppingList) -> Unit)?
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Dimens.dp16))
+            .background(MaterialTheme.colorScheme.inverseOnSurface)
+            .clickable { onClick(shoppingList) }
+            .padding(Dimens.dp8),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ListIcon(
+            iconResId = iconResId,
+            onIconClick = onIconClick?.let { { it(shoppingList) } }
+        )
+        Spacer(modifier = Modifier.width(Dimens.dp16))
+        ListName(name = shoppingList.name)
+    }
+}
+
+@Composable
+private fun ListIcon(
+    iconResId: Int,
+    onIconClick: (() -> Unit)? = null
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = CircleShape
+            )
+            .then(
+                if (onIconClick != null) {
+                    Modifier.clickable { onIconClick() }
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = iconResId),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondaryContainer),
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+private fun ListName(name: String) {
+    Column {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+private fun getValidIconResId(iconResId: Int): Int {
+    return if (iconResId != 0) iconResId else R.drawable.ic_list
 }

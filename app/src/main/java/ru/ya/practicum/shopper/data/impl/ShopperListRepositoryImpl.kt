@@ -1,5 +1,8 @@
 package ru.ya.practicum.shopper.data.impl
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.data.converter.ShopperListMapper
 import ru.ya.practicum.shopper.data.local.dao.ShopperListsDao
 import ru.ya.practicum.shopper.domain.model.ShopperList
@@ -10,8 +13,8 @@ class ShopperListRepositoryImpl(
     private val mapper: ShopperListMapper
 ) : ShopperListRepository {
 
-    override suspend fun addShopperList(shoppingList: ShopperList) {
-        dao.insert(mapper.toEntity(shoppingList))
+    override suspend fun addShopperList(shoppingList: ShopperList): Long {
+        return dao.insert(mapper.toEntity(shoppingList))
     }
 
     override suspend fun deleteShopperList(shoppingList: ShopperList) {
@@ -24,5 +27,17 @@ class ShopperListRepositoryImpl(
 
     override suspend fun updateShopperList(shoppingList: ShopperList) {
         dao.update(mapper.toEntity(shoppingList))
+    }
+
+    override suspend fun getShopperListById(id: Int): ShopperList? {
+        val entity = dao.getListById(id)
+        return entity?.let { mapper.toDomain(it) }
+    }
+
+    override fun getAllShopperLists(): Flow<Resource<List<ShopperList>>> {
+        return dao.getAllLists()
+            .map { entities ->
+                Resource.Success(entities.map { mapper.toDomain(it) })
+            }
     }
 }

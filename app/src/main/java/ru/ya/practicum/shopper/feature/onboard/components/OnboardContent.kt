@@ -17,7 +17,7 @@ fun OnboardContent(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(Dimens.dp16))
+        Spacer(modifier = Modifier.height(Dimens.dp32))
         OnboardLogo()
         Spacer(modifier = Modifier.height(Dimens.dp94))
         OnboardContentImage()
