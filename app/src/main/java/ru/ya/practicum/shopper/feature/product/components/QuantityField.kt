@@ -1,9 +1,7 @@
 package ru.ya.practicum.shopper.feature.product.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -16,31 +14,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 
 @Composable
-fun UnitTextField(
-    selectedUnit: String,
-    isExpanded: Boolean
+fun QuantityField(
+    quantity: String,
+    onQuantityChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    val colors = rememberTextFieldColors(isFocused, selectedUnit.isEmpty())
+    val colors = rememberQuantityFieldColors(isFocused, quantity)
 
     OutlinedTextField(
-        value = selectedUnit,
-        onValueChange = {},
-        readOnly = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .onFocusChanged { isFocused = it.isFocused },
+        value = quantity,
+        onValueChange = { newValue ->
+            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                val sanitized = if (newValue.length > 1 && newValue.startsWith("0")) {
+                    newValue.trimStart('0').ifEmpty { "0" }
+                } else {
+                    newValue
+                }
+                onQuantityChange(sanitized)
+            }
+        },
+        modifier = modifier.onFocusChanged { isFocused = it.isFocused },
         label = {
             Surface(color = colors.first) {
                 Text(
-                    text = stringResource(R.string.units),
+                    text = stringResource(R.string.quantity),
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.second,
                     maxLines = 1,
@@ -48,43 +54,31 @@ fun UnitTextField(
                 )
             }
         },
-        trailingIcon = {
-            Icon(
-                painter = painterResource(
-                    id = if (isExpanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down
-                ),
-                contentDescription = if (isExpanded) {
-                    stringResource(R.string.collapse)
-                } else {
-                    stringResource(R.string.extract)
-                },
-                modifier = Modifier.size(12.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
+        singleLine = true,
         shape = RoundedCornerShape(4.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.secondary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
             focusedLabelColor = MaterialTheme.colorScheme.secondary,
             cursorColor = MaterialTheme.colorScheme.primary
-        )
+        ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
 }
 
 @Composable
-private fun rememberTextFieldColors(
+private fun rememberQuantityFieldColors(
     isFocused: Boolean,
-    isEmpty: Boolean
-): Pair<androidx.compose.ui.graphics.Color, androidx.compose.ui.graphics.Color> {
+    quantity: String
+): Pair<Color, Color> {
     val surfaceColor = when {
         isFocused -> MaterialTheme.colorScheme.surface
-        isEmpty -> MaterialTheme.colorScheme.surfaceContainerLow
+        quantity.isEmpty() -> MaterialTheme.colorScheme.surfaceContainerLow
         else -> MaterialTheme.colorScheme.surface
     }
     val textColor = when {
         isFocused -> MaterialTheme.colorScheme.secondary
-        isEmpty -> MaterialTheme.colorScheme.onSurfaceVariant
+        quantity.isEmpty() -> MaterialTheme.colorScheme.onSurfaceVariant
         else -> MaterialTheme.colorScheme.secondary
     }
     return Pair(surfaceColor, textColor)

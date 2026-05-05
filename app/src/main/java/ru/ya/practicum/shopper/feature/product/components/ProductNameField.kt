@@ -1,10 +1,11 @@
 package ru.ya.practicum.shopper.feature.product.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,6 +56,7 @@ fun ProductNameField(
             Surface(color = labelSurfaceColor) {
                 Text(
                     text = stringResource(R.string.product),
+                    style = MaterialTheme.typography.bodyLarge,
                     color = labelTextColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -82,26 +85,33 @@ fun AddButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-        ),
-        enabled = enabled
-    ) {
-        Text(
-            text = stringResource(R.string.cd_add),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (enabled) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
+    FloatingActionButton(
+        onClick = {
+            if (enabled) {
+                onClick()
             }
+        },
+        containerColor = if (enabled) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+        },
+        contentColor = if (enabled) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.4f)
+        },
+        elevation = FloatingActionButtonDefaults.elevation(
+            defaultElevation = if (enabled) 6.dp else 0.dp,
+            pressedElevation = if (enabled) 3.dp else 0.dp
+        ),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.size(56.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_done),
+            contentDescription = stringResource(R.string.cd_add),
+            modifier = Modifier.size(24.dp)
         )
     }
 }

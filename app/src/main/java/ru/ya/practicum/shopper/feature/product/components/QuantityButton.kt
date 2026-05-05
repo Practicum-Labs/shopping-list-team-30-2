@@ -1,5 +1,6 @@
 package ru.ya.practicum.shopper.feature.product.components
 
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
@@ -20,7 +21,7 @@ fun QuantityButton(
     onQuantityChange: (String) -> Unit
 ) {
     val currentQuantity = quantity.toIntOrNull() ?: 0
-    val isEnabled = if (isIncrement) true else currentQuantity > 1
+    val isEnabled = if (isIncrement) true else currentQuantity > 0
 
     FloatingActionButton(
         onClick = {
@@ -33,7 +34,9 @@ fun QuantityButton(
                 onQuantityChange(newQuantity.toString())
             }
         },
-        modifier = Modifier.size(48.dp),
+        modifier = Modifier
+            .size(48.dp)
+            .offset(y = 4.dp),
         shape = RoundedCornerShape(Dimens.ROUNDED_CORNER_SHAPE_100_P),
         containerColor = if (isEnabled) {
             MaterialTheme.colorScheme.secondaryContainer
