@@ -22,6 +22,19 @@
     <string name="new_list">Новый список</string>
     <string name="cancel_button_text">Отмена</string>
     <string name="create_button_text">Создать</string>
+    <string name="product">Товар</string>
+    <string name="add_new_product">Добавить новый товар</string>
+    <string name="quantity">Количество</string>
+    <string name="units">Единицы</string>
+    <string name="unit_pcs">шт</string>
+    <string name="unit_kg">кг</string>
+    <string name="unit_l">л</string>
+    <string name="unit_pack">уп</string>
+    <string name="unit_g">гр</string>
+    <string name="unit_ml">мл</string>
+    <string name="default_quantity">1</string>
+    <string name="collapse">Свернуть</string>
+    <string name="extract">Развернуть</string>
 
 
 </resources>

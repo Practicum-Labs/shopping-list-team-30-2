@@ -19,10 +19,7 @@ val dataModule = module {
     }
 
     single<ShopperItemDao> { get<AppDataBase>().shopperItemDao() }
-
     single<ShopperListsDao> { get<AppDataBase>().shopperListsDao() }
-
     single { ShopperItemMapper() }
-
     single { ShopperListMapper() }
 }

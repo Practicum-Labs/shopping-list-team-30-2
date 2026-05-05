@@ -1,5 +1,6 @@
 package ru.ya.practicum.shopper.feature.product
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -7,48 +8,36 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import org.koin.androidx.compose.koinViewModel
+import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
 import ru.ya.practicum.shopper.feature.product.components.ProductTopBar
 
-val tmpList = listOf(
-    ru.ya.practicum.shopper.core.model.Product(
-        id = 1,
-        name = "Молоко",
-        amount = "1",
-        unit = "л",
-        isBought = false
-    ),
-    ru.ya.practicum.shopper.core.model.Product(
-        id = 2,
-        name = "Хлеб",
-        amount = "2",
-        unit = "шт",
-        isBought = false
-    )
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("UnusedParameter") // Подавлено на текущий момент не требуется
 @Composable
 fun ProductScreen(
     listId: Int,
     listName: String,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProductViewModel = koinViewModel()
 ) {
-    var showAddProductDialog by remember { mutableStateOf(false) }
+    val state by viewModel.state.collectAsState()
+    var showAddProductSheet by remember { mutableStateOf(false) }
 
-    // Временные данные для демонстрации
-    val products = remember {
-        tmpList
+    LaunchedEffect(listId) {
+        viewModel.onEvent(ProductEvent.LoadProducts(listId))
     }
 
     Scaffold(
@@ -62,28 +51,57 @@ fun ProductScreen(
             )
         },
         floatingActionButton = {
-            ProductCreateItem(onClick = { showAddProductDialog = true })
+            ProductCreateItem(onClick = { showAddProductSheet = true })
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
-        if (products.isEmpty()) {
-            ProductEmptyContent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = Dimens.dp16)
-            )
-        } else {
-            ProductItemsContent(
-                products = products,
-                onItemClick = { product ->
-                    {}
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+        ProductScreenContent(
+            state = state,
+            innerPadding = innerPadding,
+            onProductClick = { product ->
+                viewModel.onEvent(ProductEvent.ToggleBought(product, listId))
+            }
+        )
+    }
 
-            )
-        }
+    if (showAddProductSheet) {
+        ProductAddBottomSheet(
+            onDismiss = { showAddProductSheet = false },
+            onAddProduct = { name, quantity, unit ->
+                viewModel.onEvent(
+                    ProductEvent.AddProduct(
+                        name = name,
+                        quantity = quantity,
+                        unit = unit,
+                        listId = listId
+                    )
+                )
+                showAddProductSheet = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun ProductScreenContent(
+    state: ProductState,
+    innerPadding: PaddingValues,
+    onProductClick: (Product) -> Unit
+) {
+    if (state.products.isEmpty()) {
+        ProductEmptyContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = Dimens.dp16)
+        )
+    } else {
+        ProductItemsContent(
+            products = state.products,
+            onItemClick = onProductClick,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
     }
 }
