@@ -130,6 +130,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.koin)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.androidx.compose.foundation.layout)
 
     ksp(libs.androidx.room.compiler)
 
