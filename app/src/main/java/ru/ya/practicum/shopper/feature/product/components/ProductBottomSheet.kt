@@ -139,15 +139,9 @@ private fun ProductBottomSheetString(
             text = stringResource(stringRes),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .weight(1f)
-                .height(56.dp)
-                .wrapContentHeight(Alignment.CenterVertically)
+            modifier = Modifier.weight(1f).height(56.dp).wrapContentHeight(Alignment.CenterVertically)
         ) else
-            Column(modifier = Modifier
-                .weight(1f)
-                .height(56.dp)
-                .wrapContentHeight(Alignment.CenterVertically)){
+            Column(modifier = Modifier.weight(1f).height(56.dp).wrapContentHeight(Alignment.CenterVertically)){
                 Text(
                     text = stringResource(stringRes),
                     style = MaterialTheme.typography.bodyLarge,
