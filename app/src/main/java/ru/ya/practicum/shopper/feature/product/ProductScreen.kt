@@ -90,14 +90,7 @@ fun ProductScreen(
             )
         }
         ProductBottomSheet(
-            sheetState,
-            ProductBottomSheetCallBacks(
-            {},
-            {},
-            {},
-            {},
-            {},
-            )
+            sheetState, ProductBottomSheetCallBacks({}, {}, {}, {}, {})
         )
     }
 }
