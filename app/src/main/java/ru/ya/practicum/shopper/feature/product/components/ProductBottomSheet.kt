@@ -48,17 +48,13 @@ fun ProductBottomSheet(
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val currentSortString =
-        "по алфавиту" // для демонстрации. после привязки стейта заменю на значение стейта
+    val currentSortString = "по алфавиту" // для демонстрации. после привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
         onDismissRequest = callBacks.onDismissRequest,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp
-        ),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
     ) {
         Box() {
@@ -91,12 +87,7 @@ fun ProductBottomSheet(
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
                 SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
-                SortMenuItem(
-                    R.string.sortByUserPref,
-                    R.drawable.sort_user,
-                    false,
-                    callBacks.onSortByUserPref
-                )
+                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
             }
         }
     }
