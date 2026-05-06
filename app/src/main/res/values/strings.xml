@@ -42,6 +42,9 @@
     <string name="default_quantity">1</string>
     <string name="collapse">Свернуть</string>
     <string name="extract">Развернуть</string>
-
-
+    <string name="sort">Сортировка</string>
+    <string name="deleteAll">Удалить все</string>
+    <string name="clearBought">Очистить купленные</string>
+    <string name="sortByABC">По алфавиту</string>
+    <string name="sortByUserPref">Пользовательская</string>
 </resources>
