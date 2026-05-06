@@ -50,10 +50,7 @@ fun ProductScreen(
     var showAddProductDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Временные данные для демонстрации
-    val products = remember {
-        tmpList
-    }
+    val products = remember { tmpList }
 
     Scaffold(
         modifier = modifier,
@@ -90,7 +87,14 @@ fun ProductScreen(
             )
         }
         ProductBottomSheet(
-            sheetState, ProductBottomSheetCallBacks({}, {}, {}, {}, {})
+            sheetState,
+            ProductBottomSheetCallBacks(
+                onDismissRequest = {},
+                onSortByABC = {},
+                onSortByUserPref = {},
+                onDeleteAll = {},
+                onClearBought = {}
+            )
         )
     }
 }

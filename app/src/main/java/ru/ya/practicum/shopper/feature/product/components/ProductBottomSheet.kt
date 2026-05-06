@@ -1,6 +1,5 @@
 package ru.ya.practicum.shopper.feature.product.components
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,15 +14,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,15 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
-import ru.ya.practicum.shopper.feature.main.components.IconView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,21 +41,17 @@ fun ProductBottomSheet(
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val currentSortString =
-        "по алфавиту" // для демонстрации. после привязки стейта заменю на значение стейта
+    val currentSortString = "по алфавиту"
 
     ModalBottomSheet(
         onDismissRequest = callBacks.onDismissRequest,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp
-        ),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
     ) {
-        Box() {
-            Column() {
+        Box {
+            Column {
                 ProductBottomSheetString(
                     R.drawable.sort,
                     R.string.sort,
@@ -91,12 +80,7 @@ fun ProductBottomSheet(
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
                 SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
-                SortMenuItem(
-                    R.string.sortByUserPref,
-                    R.drawable.sort_user,
-                    false,
-                    callBacks.onSortByUserPref
-                )
+                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
             }
         }
     }
@@ -141,7 +125,8 @@ private fun ProductBottomSheetString(
             contentDescription = null,
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 12.dp)
         )
-        if (substring == null)
+        if
+            (substring == null) {
             Text(
                 text = stringResource(stringRes),
                 style = MaterialTheme.typography.bodyLarge,
@@ -150,7 +135,8 @@ private fun ProductBottomSheetString(
                     .weight(1f)
                     .height(56.dp)
                     .wrapContentHeight(Alignment.CenterVertically)
-            ) else
+            )
+        } else {
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -168,12 +154,14 @@ private fun ProductBottomSheetString(
                     color = GreenLight
                 )
             }
-        if (iconEndRes != null)
+        }
+        if (iconEndRes != null) {
             Icon(
                 painter = painterResource(iconEndRes),
                 contentDescription = null,
                 modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 16.dp)
             )
+        }
     }
 }
 
