@@ -48,7 +48,8 @@ fun ProductBottomSheet(
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = "по алфавиту" // для демонстрации. после привязки стейта заменю на значение стейта
+    val currentSortString =
+        "по алфавиту" // для демонстрации. после привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
         onDismissRequest = callBacks.onDismissRequest,
@@ -90,14 +91,19 @@ fun ProductBottomSheet(
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
                 SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
-                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
+                SortMenuItem(
+                    R.string.sortByUserPref,
+                    R.drawable.sort_user,
+                    false,
+                    callBacks.onSortByUserPref
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SortMenuItem(stringRes: Int, iconRes: Int, isSelected: Boolean, onClick: () -> Unit){
+private fun SortMenuItem(stringRes: Int, iconRes: Int, isSelected: Boolean, onClick: () -> Unit) {
     DropdownMenuItem(
         text = {
             Row(
@@ -116,7 +122,8 @@ private fun SortMenuItem(stringRes: Int, iconRes: Int, isSelected: Boolean, onCl
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-            )},
+            )
+        },
     )
 }
 
@@ -135,23 +142,31 @@ private fun ProductBottomSheetString(
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 12.dp)
         )
         if (substring == null)
-        Text(
-            text = stringResource(stringRes),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f).height(56.dp).wrapContentHeight(Alignment.CenterVertically)
-        ) else
-            Column(modifier = Modifier.weight(1f).height(56.dp).wrapContentHeight(Alignment.CenterVertically)){
+            Text(
+                text = stringResource(stringRes),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+            ) else
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+            ) {
                 Text(
                     text = stringResource(stringRes),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    )
+                )
                 Text(
                     text = substring,
                     style = MaterialTheme.typography.bodyMedium,
                     color = GreenLight
-                    )
+                )
             }
         if (iconEndRes != null)
             Icon(
