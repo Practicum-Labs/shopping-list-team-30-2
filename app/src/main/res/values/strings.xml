@@ -29,6 +29,19 @@
     <string name="cd_clear">Очистить</string>
     <string name="search_not_found_title">Мы не смогли найти то, \nчто вы искали</string>
     <string name="search_not_found_subtitle">Попробуйте изменить запрос \nили проверить написание</string>
+    <string name="product">Товар</string>
+    <string name="add_new_product">Добавить новый товар</string>
+    <string name="quantity">Количество</string>
+    <string name="units">Единицы</string>
+    <string name="unit_pcs">шт</string>
+    <string name="unit_kg">кг</string>
+    <string name="unit_l">л</string>
+    <string name="unit_pack">уп</string>
+    <string name="unit_g">гр</string>
+    <string name="unit_ml">мл</string>
+    <string name="default_quantity">1</string>
+    <string name="collapse">Свернуть</string>
+    <string name="extract">Развернуть</string>
 
 
 </resources>
