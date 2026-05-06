@@ -48,7 +48,7 @@ fun ProductBottomSheet(
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = "по алфавиту"//для демонстрации. после привязки стейта заменю на значение стейта
+    val currentSortString = "по алфавиту" //для демонстрации. после привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
         onDismissRequest = callBacks.onDismissRequest,
