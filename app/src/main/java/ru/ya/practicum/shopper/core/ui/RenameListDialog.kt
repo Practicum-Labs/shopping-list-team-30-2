@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -89,25 +88,11 @@ private fun ListNameTextField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    var isFocused by remember { mutableStateOf(false) }
-
-    val labelSurfaceColor =
-        when {
-            isFocused -> MaterialTheme.colorScheme.surface
-            value.isEmpty() -> MaterialTheme.colorScheme.surfaceContainerHigh
-            else -> MaterialTheme.colorScheme.surface
-        }
-
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .onFocusChanged { focusState ->
-                isFocused = focusState.isFocused
-            },
         label = {
-            Surface(color = labelSurfaceColor) {
+            Surface(color = MaterialTheme.colorScheme.surface) {
                 Text(
                     modifier = Modifier.padding(horizontal = 4.dp),
                     text = stringResource(R.string.list_title),
@@ -122,6 +107,7 @@ private fun ListNameTextField(
             )
         },
         singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.secondary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
