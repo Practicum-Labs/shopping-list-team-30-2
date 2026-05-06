@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
+import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
@@ -90,11 +91,13 @@ fun ProductScreen(
         }
         ProductBottomSheet(
             sheetState,
+            ProductBottomSheetCallBacks(
             {},
             {},
             {},
             {},
             {},
+            )
         )
     }
 }

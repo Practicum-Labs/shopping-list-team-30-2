@@ -45,18 +45,14 @@ import ru.ya.practicum.shopper.feature.main.components.IconView
 @Composable
 fun ProductBottomSheet(
     sheetState: SheetState,
-    onDismissRequest: () -> Unit,
-    onSortByABC: () -> Unit,
-    onSortByUserPref: () -> Unit,
-    onDeleteAll: () -> Unit,
-    onClearBought: () -> Unit,
+    callBacks: ProductBottomSheetCallBacks,
 ) {
 
     var menuExpanded by remember { mutableStateOf(false) }
     val currentSortString = "по алфавиту"//для демонстрации. после привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = callBacks.onDismissRequest,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(
@@ -78,13 +74,13 @@ fun ProductBottomSheet(
                     R.drawable.delete,
                     R.string.deleteAll,
                     null,
-                    onDeleteAll
+                    callBacks.onDeleteAll
                 )
                 ProductBottomSheetString(
                     R.drawable.clear,
                     R.string.clearBought,
                     null,
-                    onClearBought
+                    callBacks.onClearBought
                 )
             }
             DropdownMenu(
@@ -94,8 +90,8 @@ fun ProductBottomSheet(
                 modifier = Modifier.align(Alignment.TopEnd),
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
-                SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, onSortByABC)
-                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, onSortByUserPref)
+                SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
+                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
             }
         }
     }
@@ -172,3 +168,11 @@ private fun ProductBottomSheetString(
             )
     }
 }
+
+class ProductBottomSheetCallBacks(
+    val onDismissRequest: () -> Unit,
+    val onSortByABC: () -> Unit,
+    val onSortByUserPref: () -> Unit,
+    val onDeleteAll: () -> Unit,
+    val onClearBought: () -> Unit,
+)
