@@ -47,7 +47,6 @@ fun ProductBottomSheet(
     sheetState: SheetState,
     callBacks: ProductBottomSheetCallBacks,
 ) {
-
     var menuExpanded by remember { mutableStateOf(false) }
     val currentSortString = "по алфавиту"//для демонстрации. после привязки стейта заменю на значение стейта
 
