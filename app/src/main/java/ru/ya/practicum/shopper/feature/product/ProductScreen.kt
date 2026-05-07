@@ -36,9 +36,11 @@ fun ProductScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = koinViewModel()
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAddProductDialog by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsState()
     var showAddProductSheet by remember { mutableStateOf(false) }
+    var showProductBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(listId) {
         viewModel.onEvent(ProductEvent.LoadProducts(listId))
@@ -51,7 +53,7 @@ fun ProductScreen(
             ProductTopBar(
                 title = listName,
                 onBackClick = onBackClick,
-                onMenuClick = { }
+                onMenuClick = { showProductBottomSheet = true }
             )
         },
         floatingActionButton = {
@@ -64,8 +66,7 @@ fun ProductScreen(
             innerPadding = innerPadding,
             onProductClick = { product ->
                 viewModel.onEvent(ProductEvent.ToggleBought(product, listId))
-            },
-            productBottomSheetCallBacks = bottomSheetCallBacks(viewModel)
+            }
         )
     }
 
@@ -85,6 +86,14 @@ fun ProductScreen(
             }
         )
     }
+
+    if (showProductBottomSheet) {
+        ProductBottomSheet(
+            sheetState,
+            {showProductBottomSheet = false},
+            bottomSheetCallBacks(viewModel)
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,10 +101,8 @@ fun ProductScreen(
 private fun ProductScreenContent(
     state: ProductState,
     innerPadding: PaddingValues,
-    onProductClick: (Product) -> Unit,
-    productBottomSheetCallBacks: ProductBottomSheetCallBacks
+    onProductClick: (Product) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     if (state.products.isEmpty()) {
         ProductEmptyContent(
             modifier = Modifier
@@ -112,12 +119,10 @@ private fun ProductScreenContent(
                 .padding(innerPadding)
         )
     }
-    ProductBottomSheet(sheetState, productBottomSheetCallBacks)
 }
 
 fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
     return ProductBottomSheetCallBacks(
-        {},
         viewModel::sortProductsByABC,
         viewModel::sortProductByUserPref,
         viewModel::deleteAllProducts,

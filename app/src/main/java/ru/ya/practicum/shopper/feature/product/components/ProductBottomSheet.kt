@@ -38,13 +38,14 @@ import ru.ya.practicum.shopper.core.ui.theme.GreenLight
 @Composable
 fun ProductBottomSheet(
     sheetState: SheetState,
+    onDismissRequest: () -> Unit,
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val currentSortString = "по алфавиту" // для демонстрации. После привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
-        onDismissRequest = callBacks.onDismissRequest,
+        onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -160,7 +161,6 @@ private fun ProductBottomSheetString(
 }
 
 class ProductBottomSheetCallBacks(
-    val onDismissRequest: () -> Unit,
     val onSortByABC: () -> Unit,
     val onSortByUserPref: () -> Unit,
     val onDeleteAll: () -> Unit,
