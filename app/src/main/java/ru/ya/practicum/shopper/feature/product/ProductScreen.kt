@@ -97,13 +97,17 @@ fun ProductScreen(
         }
         ProductBottomSheet(
             sheetState,
-            ProductBottomSheetCallBacks(
-                {},
-                {},
-                {},
-                {},
-                {}
-            )
+            fiveEmptyCallBacks()
         )
     }
+}
+
+fun fiveEmptyCallBacks(): ProductBottomSheetCallBacks{
+    return ProductBottomSheetCallBacks(
+        {},
+        {},
+        {},
+        {},
+        {}
+    )
 }
