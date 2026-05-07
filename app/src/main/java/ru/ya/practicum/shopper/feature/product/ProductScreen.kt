@@ -9,6 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,7 +53,7 @@ fun ProductScreen(
 
     // Временные данные для демонстрации
     val products = remember {
-        tmpList
+        mutableStateListOf<ru.ya.practicum.shopper.core.model.Product>().also { it.addAll(tmpList) }
     }
 
     Scaffold(
@@ -80,8 +81,13 @@ fun ProductScreen(
         } else {
             ProductItemsContent(
                 products = products,
-                onItemClick = { product ->
-                    {}
+                onItemClick = { clickedProduct ->
+                    val index = products.indexOfFirst { it.id == clickedProduct.id }
+                    if (index != -1) {
+                        products[index] = clickedProduct.copy(
+                            isBought = !clickedProduct.isBought
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxSize()
