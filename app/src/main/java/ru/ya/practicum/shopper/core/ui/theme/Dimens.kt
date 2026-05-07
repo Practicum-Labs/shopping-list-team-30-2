@@ -5,6 +5,11 @@ import androidx.compose.ui.unit.sp
 
 object Dimens {
     const val AUTO_NAVIGATION_DELAY_MS = 3000L
+    const val NETWORK_TIMEOUT = 30L
+    const val RESPONSE_400 = 400
+    const val RESPONSE_401 = 401
+    const val RESPONSE_403 = 403
+    const val RESPONSE_409 = 409
     const val ROUNDED_CORNER_SHAPE_100_P = 100
 
     val dp4 = 4.dp

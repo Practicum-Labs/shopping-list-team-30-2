@@ -29,6 +29,14 @@
     <string name="cd_clear">Очистить</string>
     <string name="search_not_found_title">Мы не смогли найти то, \nчто вы искали</string>
     <string name="search_not_found_subtitle">Попробуйте изменить запрос \nили проверить написание</string>
+    <string name="entrance">Вход</string>
+    <string name="registration">Регистрация</string>
+    <string name="password">пароль</string>
+    <string name="email">"Электронная почта"</string>
+    <string name="login">Войти</string>
+    <string name="sign_in">Зарегистрироваться</string>
+    <string name="no_account_register">Нет аккаунта? Зарегистрироваться</string>
+    <string name="account_exists_entrance">Уже есть аккаунт? Войти</string>
     <string name="product">Товар</string>
     <string name="add_new_product">Добавить новый товар</string>
     <string name="quantity">Количество</string>
