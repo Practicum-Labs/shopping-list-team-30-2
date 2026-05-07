@@ -107,6 +107,38 @@ class ProductViewModel(
         }
     }
 
+    fun sortProductsByABC() {
+        viewModelScope.launch {
+            _state.value.products.forEach {
+                itemRepository.deleteItemById(it.id.toInt())
+            }
+        }
+        loadProducts(_state.value.currentListId)
+        //_state.update { it.copy(products = it.products.sortedBy { it.name }) }
+    }
+
+    fun sortProductByUserPref() {
+        //можно не делать, оставим на конец, если время хватит
+    }
+
+    fun deleteAllProducts() {
+        viewModelScope.launch {
+            _state.value.products.forEach {
+                itemRepository.deleteItemById(it.id.toInt())
+            }
+        }
+        loadProducts(_state.value.currentListId)
+    }
+
+    fun clearBoughtProducts() {
+        viewModelScope.launch {
+            _state.value.products.filter{it.isBought}.forEach {
+                itemRepository.deleteItemById(it.id.toInt())
+            }
+        }
+        loadProducts(_state.value.currentListId)
+    }
+
     private fun loadProducts(listId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }

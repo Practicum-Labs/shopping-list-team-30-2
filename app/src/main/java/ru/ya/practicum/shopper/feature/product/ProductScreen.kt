@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +21,7 @@ import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
+import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
@@ -35,7 +37,6 @@ fun ProductScreen(
     viewModel: ProductViewModel = koinViewModel()
 ) {
     var showAddProductDialog by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val state by viewModel.state.collectAsState()
     var showAddProductSheet by remember { mutableStateOf(false) }
 
@@ -63,7 +64,8 @@ fun ProductScreen(
             innerPadding = innerPadding,
             onProductClick = { product ->
                 viewModel.onEvent(ProductEvent.ToggleBought(product, listId))
-            }
+            },
+            productBottomSheetCallBacks = bottomSheetCallBacks(viewModel)
         )
     }
 
@@ -85,12 +87,15 @@ fun ProductScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductScreenContent(
     state: ProductState,
     innerPadding: PaddingValues,
-    onProductClick: (Product) -> Unit
+    onProductClick: (Product) -> Unit,
+    productBottomSheetCallBacks: ProductBottomSheetCallBacks
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     if (state.products.isEmpty()) {
         ProductEmptyContent(
             modifier = Modifier
@@ -107,15 +112,15 @@ private fun ProductScreenContent(
                 .padding(innerPadding)
         )
     }
-    ProductBottomSheet(sheetState, fiveEmptyCallBacks())
+    ProductBottomSheet(sheetState, productBottomSheetCallBacks)
 }
 
-fun fiveEmptyCallBacks(): ProductBottomSheetCallBacks {
+fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
     return ProductBottomSheetCallBacks(
         {},
-        {},
-        {},
-        {},
-        {}
+        viewModel::sortProductsByABC,
+        viewModel::sortProductByUserPref,
+        viewModel::deleteAllProducts,
+        viewModel::clearBoughtProducts
     )
 }
