@@ -2,10 +2,12 @@ package ru.ya.practicum.shopper.feature.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ya.practicum.shopper.core.model.ShoppingList
@@ -24,8 +26,11 @@ data class MainState(
     val showIconPicker: Boolean = false,
     val selectedIconId: Int = 0,
     val newListName: String = "",
-    val editingListId: Int? = null
-
+    val editingListId: Int? = null,
+    val showDeleteAllDialog: Boolean = false,
+    val isSearchActive: Boolean = false,
+    val searchQuery: String = "",
+    val searchInput: String = ""
 )
 
 sealed class MainEvent {
@@ -41,6 +46,13 @@ sealed class MainEvent {
     object LoadLists : MainEvent()
     data class UpdateListIcon(val listId: Int, val newIconId: Int) : MainEvent()
     data class ShowIconPickerForList(val listId: Int) : MainEvent()
+    object ShowDeleteAllDialog : MainEvent()
+    object HideDeleteAllDialog : MainEvent()
+    object ConfirmDeleteAll : MainEvent()
+    object ToggleSearch : MainEvent()
+    data class UpdateSearchQuery(val query: String) : MainEvent()
+    object CloseSearch : MainEvent()
+    object PerformSearch : MainEvent()
 }
 
 @Suppress("TooManyFunctions", "UnusedPrivateProperty") // Подавлено
@@ -51,9 +63,22 @@ class MainViewModel(
 
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
+    private val _searchQueryInput = MutableStateFlow("")
 
     init {
         loadLists()
+        setupSearchDebounce()
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun setupSearchDebounce() {
+        viewModelScope.launch {
+            _searchQueryInput
+                .debounce(SEARCH_DEBOUNCE_MS)
+                .collect { query ->
+                    _state.update { it.copy(searchQuery = query) }
+                }
+        }
     }
 
     fun onEvent(event: MainEvent) {
@@ -61,16 +86,76 @@ class MainViewModel(
             is MainEvent.CreateList -> createList(event.name, event.iconId)
             is MainEvent.DeleteList -> deleteList(event.listId)
             is MainEvent.UpdateListName -> updateListName(event.listId, event.newName)
+            is MainEvent.SelectIcon -> selectIcon(event.iconId)
+            is MainEvent.UpdateNewListName -> updateNewListName(event.name)
+            is MainEvent.UpdateListIcon -> updateListIcon(event.listId, event.newIconId)
+            is MainEvent.ShowIconPickerForList -> showIconPickerForList(event.listId)
+            is MainEvent.UpdateSearchQuery -> updateSearchQuery(event.query)
+            else -> onSimpleEvent(event)
+        }
+    }
+    private fun onSimpleEvent(event: MainEvent) {
+        when (event) {
             MainEvent.ShowAddDialog -> showAddDialog()
             MainEvent.HideAddDialog -> hideAddDialog()
             MainEvent.ShowIconPicker -> showIconPicker()
             MainEvent.HideIconPicker -> hideIconPicker()
-            is MainEvent.SelectIcon -> selectIcon(event.iconId)
-            is MainEvent.UpdateNewListName -> updateNewListName(event.name)
             MainEvent.LoadLists -> loadLists()
-            is MainEvent.UpdateListIcon -> updateListIcon(event.listId, event.newIconId)
-            is MainEvent.ShowIconPickerForList -> showIconPickerForList(event.listId)
+            MainEvent.ShowDeleteAllDialog -> showDeleteAllDialog()
+            MainEvent.HideDeleteAllDialog -> hideDeleteAllDialog()
+            MainEvent.ConfirmDeleteAll -> confirmDeleteAll()
+            MainEvent.ToggleSearch -> toggleSearch()
+            MainEvent.CloseSearch -> closeSearch()
+            MainEvent.PerformSearch -> performSearch()
+            else -> Unit
         }
+    }
+
+    private fun performSearch() {
+        _state.update { it.copy(searchQuery = it.searchInput) }
+    }
+
+    private fun showDeleteAllDialog() {
+        _state.update { it.copy(showDeleteAllDialog = true) }
+    }
+
+    private fun hideDeleteAllDialog() {
+        _state.update { it.copy(showDeleteAllDialog = false) }
+    }
+
+    private fun confirmDeleteAll() {
+        viewModelScope.launch {
+            try {
+                val currentLists = _state.value.lists
+                currentLists.forEach { list ->
+                    listRepository.deleteShopperListById(list.id)
+                }
+                _state.update { it.copy(showDeleteAllDialog = false) }
+            } catch (e: SQLException) {
+                _state.update { it.copy(error = "Ошибка при удалении: ${e.message}") }
+            } catch (e: IOException) {
+                _state.update { it.copy(error = "Ошибка ввода-вывода: ${e.message}") }
+            } catch (e: IllegalStateException) {
+                _state.update { it.copy(error = "Ошибка состояния: ${e.message}") }
+            }
+        }
+    }
+
+    private fun toggleSearch() {
+        _state.update {
+            it.copy(isSearchActive = !it.isSearchActive, searchQuery = "")
+        }
+        _searchQueryInput.value = ""
+    }
+
+    private fun updateSearchQuery(query: String) {
+        _state.update { it.copy(searchInput = query) }
+        _searchQueryInput.value = query
+    }
+
+    private fun closeSearch() {
+        _state.update { it.copy(isSearchActive = false, searchQuery = "") }
+        _searchQueryInput.value = ""
     }
 
     private fun showIconPickerForList(listId: Int) {
@@ -121,6 +206,7 @@ class MainViewModel(
                                 )
                             }
                         }
+
                         is Resource.Error -> {
                             _state.update {
                                 it.copy(
@@ -230,5 +316,8 @@ class MainViewModel(
             name = this.name,
             iconResId = this.iconId
         )
+    }
+    private companion object {
+        const val SEARCH_DEBOUNCE_MS = 2000L
     }
 }

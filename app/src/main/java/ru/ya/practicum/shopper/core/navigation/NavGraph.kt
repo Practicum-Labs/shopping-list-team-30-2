@@ -38,6 +38,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     dataStore: OnboardDataStore,
+    onThemeToggle: () -> Unit,
     startDestination: String = Screen.Onboard.route
 ) {
     val navController = rememberNavController()
@@ -58,6 +59,7 @@ fun NavGraph(
     AppNavHost(
         navController = navController,
         dataStore = dataStore,
+        onThemeToggle = onThemeToggle,
         startDestination = if (isOnboardCompleted) Screen.Main.route else startDestination
     )
 }
@@ -66,6 +68,7 @@ fun NavGraph(
 fun AppNavHost(
     navController: NavHostController,
     dataStore: OnboardDataStore,
+    onThemeToggle: () -> Unit,
     startDestination: String
 ) {
     NavHost(
@@ -90,7 +93,8 @@ fun AppNavHost(
             MainScreen(
                 onNavigateToProduct = { listId, listName ->
                     navController.navigate(Screen.Product.passArguments(listId, listName))
-                }
+                },
+                onThemeToggle = onThemeToggle
             )
         }
 

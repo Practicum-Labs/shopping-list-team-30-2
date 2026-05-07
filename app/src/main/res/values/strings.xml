@@ -27,6 +27,13 @@
     <string name="clearBought">Очистить купленные</string>
     <string name="sortByABC">По алфавиту</string>
     <string name="sortByUserPref">Пользовательская</string>
+    <string name="delete_all_lists_title">Удалить все списки?</string>
+    <string name="delete_all_lists_body">Это действие нельзя будет отменить</string>
+    <string name="delete_button_text">Удалить</string>
+    <string name="search_lists_hint">Поиск списков</string>
+    <string name="cd_clear">Очистить</string>
+    <string name="search_not_found_title">Мы не смогли найти то, \nчто вы искали</string>
+    <string name="search_not_found_subtitle">Попробуйте изменить запрос \nили проверить написание</string>
 
 
 </resources>
