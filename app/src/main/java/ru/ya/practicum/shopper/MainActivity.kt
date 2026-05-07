@@ -24,9 +24,9 @@ class MainActivity : ComponentActivity() {
             Theme(darkTheme = isDarkTheme) {
                 val dataStore = remember { OnboardDataStore(applicationContext) }
                 NavGraph(
+                    context = applicationContext,
                     dataStore = dataStore,
                     onThemeToggle = { isDarkTheme = !isDarkTheme },
-                    startDestination = "onboard"
                 )
             }
         }

@@ -9,7 +9,6 @@ plugins {
 }
 
 android {
-
     val properties = Properties()
     val gradlePropertiesFile = rootProject.file("gradle.properties")
 
@@ -88,6 +87,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            type = "String",
+            name = "BASE_URL",
+            value = "\"https://practicumopbackend-production.up.railway.app/\""
+        )
     }
 
     buildTypes {
@@ -99,6 +104,20 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField(
+                type = "String",
+                name = "BASE_URL",
+                value = "\"https://practicumopbackend-production.up.railway.app/\""
+            )
+        }
+
+        debug {
+            buildConfigField(
+                type = "String",
+                name = "BASE_URL",
+                value = "\"https://practicumopbackend-production.up.railway.app/\""
+            )
         }
     }
 
@@ -109,6 +128,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -130,6 +150,12 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.koin)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.play.services.auth)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+    implementation(libs.kotlinx.coroutines.android)
+
 
     ksp(libs.androidx.room.compiler)
 
