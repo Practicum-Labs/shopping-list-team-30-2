@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.ui.components.buttons.PlainButton
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +42,9 @@ fun ProductBottomSheet(
     onDismissRequest: () -> Unit,
     callBacks: ProductBottomSheetCallBacks,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+    var deleteAllMenuExpanded by remember { mutableStateOf(false) }
+    var clearBoughtMenuExpanded by remember { mutableStateOf(false) }
     val currentSortString = "по алфавиту" // для демонстрации. После привязки стейта заменю на значение стейта
 
     ModalBottomSheet(
@@ -57,32 +60,54 @@ fun ProductBottomSheet(
                     R.drawable.sort,
                     R.string.sort,
                     currentSortString,
-                    { menuExpanded = true },
+                    { sortMenuExpanded = true },
                     R.drawable.arrow_right
                 )
                 ProductBottomSheetString(
                     R.drawable.delete,
                     R.string.deleteAll,
                     null,
-                    callBacks.onDeleteAll
+                    { deleteAllMenuExpanded = true }
                 )
                 ProductBottomSheetString(
                     R.drawable.clear,
                     R.string.clearBought,
                     null,
-                    callBacks.onClearBought
+                    { clearBoughtMenuExpanded = true }
                 )
             }
+
             DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
+                expanded = sortMenuExpanded,
+                onDismissRequest = { sortMenuExpanded = false },
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 modifier = Modifier.align(Alignment.TopEnd),
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
                 SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
-                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
+                SortMenuItem(
+                    R.string.sortByUserPref,
+                    R.drawable.sort_user,
+                    false,
+                    callBacks.onSortByUserPref
+                )
             }
+
+            ConfirmDeleteDropdownMenu(
+                deleteAllMenuExpanded,
+                R.string.deleteAll,
+                { deleteAllMenuExpanded = false },
+                callBacks.onDeleteAll,
+                { deleteAllMenuExpanded = false }
+            )
+
+            ConfirmDeleteDropdownMenu(
+                clearBoughtMenuExpanded,
+                R.string.clearBought,
+                { clearBoughtMenuExpanded = false },
+                callBacks.onClearBought,
+                { clearBoughtMenuExpanded = false }
+            )
         }
     }
 }
@@ -159,6 +184,31 @@ private fun ProductBottomSheetString(
             ) }
     }
 }
+
+@Composable
+private fun ConfirmDeleteDropdownMenu(
+    menuExpanded: Boolean,
+    text: Int,
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    DropdownMenu(
+        expanded = menuExpanded,
+        onDismissRequest = onDismissRequest,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ){
+        Column() {
+            Icon(painter = painterResource(R.drawable.attention), contentDescription = null)
+            Text(text = stringResource(text))
+            Row(){
+                PlainButton(R.string.delete_button_text, onConfirm)
+                PlainButton(R.string.cancel_button_text, onCancel)
+            }
+        }
+    }
+}
+
 
 class ProductBottomSheetCallBacks(
     val onSortByABC: () -> Unit,
