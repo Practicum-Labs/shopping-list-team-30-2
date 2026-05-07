@@ -21,7 +21,8 @@ data class ProductState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val currentListId: Int = 0
+    val currentListId: Int = 0,
+    val sortingByName: Boolean = false,
 )
 
 sealed class ProductEvent {
@@ -34,6 +35,7 @@ sealed class ProductEvent {
 
     data class ToggleBought(val product: Product, val listId: Int) : ProductEvent()
     data class LoadProducts(val listId: Int) : ProductEvent()
+    data class SwitchSorting(val byName: Boolean) : ProductEvent()
 }
 
 class ProductViewModel(
@@ -61,7 +63,22 @@ class ProductViewModel(
 
             is ProductEvent.ToggleBought -> toggleBought(event.product, event.listId)
             is ProductEvent.LoadProducts -> loadProducts(event.listId)
+            is ProductEvent.SwitchSorting -> switchSorting(event.byName)
         }
+    }
+
+    fun sortProductsByABC() {
+        switchSorting(true)
+    }
+
+    fun sortProductByUserPref() {
+        switchSorting(false)
+    }
+
+    private fun switchSorting(byName: Boolean) {
+        //todo сохранение настройки сортировки в шаред преференс
+        _state.update { it.copy(sortingByName = byName) }
+        loadProducts(_state.value.currentListId)
     }
 
     private fun addProduct(name: String, quantity: String, unit: String, listId: Int) {
@@ -107,20 +124,6 @@ class ProductViewModel(
         }
     }
 
-    fun sortProductsByABC() {
-        viewModelScope.launch {
-            _state.value.products.forEach {
-                itemRepository.deleteItemById(it.id.toInt())
-            }
-        }
-        loadProducts(_state.value.currentListId)
-        //_state.update { it.copy(products = it.products.sortedBy { it.name }) }
-    }
-
-    fun sortProductByUserPref() {
-        //можно не делать, оставим на конец, если время хватит
-    }
-
     fun deleteAllProducts() {
         viewModelScope.launch {
             _state.value.products.forEach {
@@ -143,7 +146,7 @@ class ProductViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
 
-            itemRepository.getAllItems(listId)
+            itemRepository.getAllItems(listId, _state.value.sortingByName)
                 .catch { e -> handleLoadError(e) }
                 .collect { resource -> handleLoadResult(resource) }
         }
