@@ -125,7 +125,7 @@ private fun ProductBottomSheetString(
             contentDescription = null,
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 12.dp)
         )
-        if (substring == null) {Text(
+        if (substring == null) { Text(
             text = stringResource(stringRes),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
@@ -133,7 +133,7 @@ private fun ProductBottomSheetString(
                 .weight(1f)
                 .height(56.dp)
                 .wrapContentHeight(Alignment.CenterVertically)
-        )} else {Column(
+        ) } else { Column(
             modifier = Modifier
                 .weight(1f)
                 .height(56.dp)
@@ -149,13 +149,13 @@ private fun ProductBottomSheetString(
                 style = MaterialTheme.typography.bodyMedium,
                 color = GreenLight
             )
-        }}
-        if (iconEndRes != null){
+        } }
+        if (iconEndRes != null) {
             Icon(
                 painter = painterResource(iconEndRes),
                 contentDescription = null,
                 modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 16.dp)
-            )}
+            ) }
     }
 }
 
