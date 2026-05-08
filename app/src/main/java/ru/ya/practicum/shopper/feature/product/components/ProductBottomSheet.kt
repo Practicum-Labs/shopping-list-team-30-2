@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
@@ -42,6 +43,8 @@ fun ProductBottomSheet(
     sheetState: SheetState,
     state: ProductState,
     onDismissRequest: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onClearBought: () -> Unit,
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -70,13 +73,13 @@ fun ProductBottomSheet(
                     R.drawable.delete,
                     R.string.deleteAll,
                     null,
-                    { deleteAllMenuExpanded = true }
+                    onDeleteAll
                 )
                 ProductBottomSheetString(
                     R.drawable.clear,
                     R.string.clearBought,
                     null,
-                    { clearBoughtMenuExpanded = true }
+                    onClearBought
                 )
             }
 
@@ -107,27 +110,27 @@ fun ProductBottomSheet(
                 )
             }
 
-            ConfirmDeleteDropdownMenu(
-                deleteAllMenuExpanded,
-                R.string.deleteAll,
-                { deleteAllMenuExpanded = false },
-                {
-                    callBacks.onDeleteAll()
-                    onDismissRequest()
-                },
-                { deleteAllMenuExpanded = false }
-            )
-
-            ConfirmDeleteDropdownMenu(
-                clearBoughtMenuExpanded,
-                R.string.clearBought,
-                { clearBoughtMenuExpanded = false },
-                {
-                    callBacks.onClearBought()
-                    onDismissRequest()
-                },
-                { clearBoughtMenuExpanded = false }
-            )
+//            ConfirmDeleteDropdownMenu(
+//                deleteAllMenuExpanded,
+//                R.string.deleteAll,
+//                { deleteAllMenuExpanded = false },
+//                {
+//                    callBacks.onDeleteAll()
+//                    onDismissRequest()
+//                },
+//                { deleteAllMenuExpanded = false }
+//            )
+//
+//            ConfirmDeleteDropdownMenu(
+//                clearBoughtMenuExpanded,
+//                R.string.clearBought,
+//                { clearBoughtMenuExpanded = false },
+//                {
+//                    callBacks.onClearBought()
+//                    onDismissRequest()
+//                },
+//                { clearBoughtMenuExpanded = false }
+//            )
         }
     }
 }
@@ -205,34 +208,32 @@ private fun ProductBottomSheetString(
     }
 }
 
-@Composable
-private fun ConfirmDeleteDropdownMenu(
-    menuExpanded: Boolean,
-    text: Int,
-    onDismissRequest: () -> Unit,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
-) {
-    DropdownMenu(
-        expanded = menuExpanded,
-        onDismissRequest = onDismissRequest,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ){
-        Column() {
-            Icon(painter = painterResource(R.drawable.attention), contentDescription = null)
-            Text(text = stringResource(text))
-            Row(){
-                PlainButton(R.string.delete_button_text, onConfirm)
-                PlainButton(R.string.cancel_button_text, onCancel)
-            }
-        }
-    }
-}
+//@Composable
+//private fun ConfirmDeleteDropdownMenu(
+//    menuExpanded: Boolean,
+//    text: Int,
+//    onDismissRequest: () -> Unit,
+//    onConfirm: () -> Unit,
+//    onCancel: () -> Unit
+//) {
+//    DropdownMenu(
+//        expanded = menuExpanded,
+//        onDismissRequest = onDismissRequest,
+//        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+//    ){
+//        Column() {
+//            Icon(painter = painterResource(R.drawable.attention), contentDescription = null)
+//            Text(text = stringResource(text))
+//            Row(){
+//                PlainButton(R.string.delete_button_text, onConfirm)
+//                PlainButton(R.string.cancel_button_text, onCancel)
+//            }
+//        }
+//    }
+//}
 
 
 class ProductBottomSheetCallBacks(
     val onSortByABC: () -> Unit,
     val onSortByUserPref: () -> Unit,
-    val onDeleteAll: () -> Unit,
-    val onClearBought: () -> Unit,
 )

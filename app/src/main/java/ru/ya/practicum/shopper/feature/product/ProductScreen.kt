@@ -17,8 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import org.koin.androidx.compose.koinViewModel
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.product.components.ConfirmDeleteDialog
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
@@ -41,6 +43,8 @@ fun ProductScreen(
     val state by viewModel.state.collectAsState()
     var showAddProductSheet by remember { mutableStateOf(false) }
     var showProductBottomSheet by remember { mutableStateOf(false) }
+    var showDialogDeleteAll by remember {mutableStateOf(false)}
+    var showDialogClearBought by remember {mutableStateOf(false)}
 
     LaunchedEffect(listId) {
         viewModel.onEvent(ProductEvent.LoadProducts(listId))
@@ -92,8 +96,24 @@ fun ProductScreen(
             sheetState,
             state,
             {showProductBottomSheet = false},
+            {
+                showDialogDeleteAll = true
+                showProductBottomSheet = false
+            },
+            {
+                showDialogClearBought = true
+                showProductBottomSheet = false
+            },
             bottomSheetCallBacks(viewModel)
         )
+    }
+
+    if (showDialogDeleteAll) {
+        ConfirmDeleteDialog(R.string.deleteAllConfirm, {showDialogDeleteAll = false}, viewModel::deleteAllProducts)
+    }
+
+    if (showDialogClearBought) {
+        ConfirmDeleteDialog(R.string.clearBoughtConfirm, {showDialogClearBought = false}, viewModel::clearBoughtProducts)
     }
 }
 
@@ -125,8 +145,6 @@ private fun ProductScreenContent(
 fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
     return ProductBottomSheetCallBacks(
         viewModel::sortProductsByABC,
-        viewModel::sortProductByUserPref,
-        viewModel::deleteAllProducts,
-        viewModel::clearBoughtProducts
+        viewModel::sortProductByUserPref
     )
 }
