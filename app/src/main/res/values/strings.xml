@@ -55,4 +55,6 @@
     <string name="clearBought">Очистить купленные</string>
     <string name="sortByABC">По алфавиту</string>
     <string name="sortByUserPref">Пользовательская</string>
+    <string name="deleteAllConfirm">Удалить все товары?</string>
+    <string name="clearBoughtConfirm">Удалить все купленные товары?</string>
 </resources>

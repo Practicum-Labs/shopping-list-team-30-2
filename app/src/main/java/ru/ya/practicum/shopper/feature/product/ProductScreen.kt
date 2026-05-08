@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,9 +17,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import org.koin.androidx.compose.koinViewModel
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.product.components.ConfirmDeleteDialog
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
+import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
+import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
@@ -33,8 +38,13 @@ fun ProductScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = koinViewModel()
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showAddProductDialog by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsState()
     var showAddProductSheet by remember { mutableStateOf(false) }
+    var showProductBottomSheet by remember { mutableStateOf(false) }
+    var showDialogDeleteAll by remember {mutableStateOf(false)}
+    var showDialogClearBought by remember {mutableStateOf(false)}
 
     LaunchedEffect(listId) {
         viewModel.onEvent(ProductEvent.LoadProducts(listId))
@@ -47,7 +57,7 @@ fun ProductScreen(
             ProductTopBar(
                 title = listName,
                 onBackClick = onBackClick,
-                onMenuClick = { }
+                onMenuClick = { showProductBottomSheet = true }
             )
         },
         floatingActionButton = {
@@ -80,8 +90,34 @@ fun ProductScreen(
             }
         )
     }
+
+    if (showProductBottomSheet) {
+        ProductBottomSheet(
+            sheetState,
+            state,
+            {showProductBottomSheet = false},
+            {
+                showDialogDeleteAll = true
+                showProductBottomSheet = false
+            },
+            {
+                showDialogClearBought = true
+                showProductBottomSheet = false
+            },
+            bottomSheetCallBacks(viewModel)
+        )
+    }
+
+    if (showDialogDeleteAll) {
+        ConfirmDeleteDialog(R.string.deleteAllConfirm, {showDialogDeleteAll = false}, viewModel::deleteAllProducts)
+    }
+
+    if (showDialogClearBought) {
+        ConfirmDeleteDialog(R.string.clearBoughtConfirm, {showDialogClearBought = false}, viewModel::clearBoughtProducts)
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductScreenContent(
     state: ProductState,
@@ -104,4 +140,11 @@ private fun ProductScreenContent(
                 .padding(innerPadding)
         )
     }
+}
+
+fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
+    return ProductBottomSheetCallBacks(
+        viewModel::sortProductsByABC,
+        viewModel::sortProductByUserPref
+    )
 }

@@ -16,5 +16,5 @@ val domainModule = module {
         ShopperListRepositoryImpl(get(), get())
     }
 
-    factory { ProductViewModel(get(), get()) }
+    factory { ProductViewModel(get(), get(), get()) }
 }

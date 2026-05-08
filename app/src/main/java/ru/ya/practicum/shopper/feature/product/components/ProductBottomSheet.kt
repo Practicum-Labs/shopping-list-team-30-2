@@ -29,59 +29,108 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.ui.components.buttons.PlainButton
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
+import ru.ya.practicum.shopper.feature.product.ProductState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductBottomSheet(
     sheetState: SheetState,
+    state: ProductState,
+    onDismissRequest: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onClearBought: () -> Unit,
     callBacks: ProductBottomSheetCallBacks,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = "по алфавиту"
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+    var deleteAllMenuExpanded by remember { mutableStateOf(false) }
+    var clearBoughtMenuExpanded by remember { mutableStateOf(false) }
+    val currentSortString = if (state.sortingByName) "по алфавиту" else "пользовательская"
 
     ModalBottomSheet(
-        onDismissRequest = callBacks.onDismissRequest,
+        onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
+
     ) {
-        Box {
-            Column {
+        Box() {
+            Column() {
                 ProductBottomSheetString(
                     R.drawable.sort,
                     R.string.sort,
                     currentSortString,
-                    { menuExpanded = true },
+                    { sortMenuExpanded = true },
                     R.drawable.arrow_right
                 )
                 ProductBottomSheetString(
                     R.drawable.delete,
                     R.string.deleteAll,
                     null,
-                    callBacks.onDeleteAll
+                    onDeleteAll
                 )
                 ProductBottomSheetString(
                     R.drawable.clear,
                     R.string.clearBought,
                     null,
-                    callBacks.onClearBought
+                    onClearBought
                 )
             }
+
             DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
+                expanded = sortMenuExpanded,
+                onDismissRequest = { sortMenuExpanded = false },
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 modifier = Modifier.align(Alignment.TopEnd),
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
-                SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
-                SortMenuItem(R.string.sortByUserPref, R.drawable.sort_user, false, callBacks.onSortByUserPref)
+                SortMenuItem(
+                    R.string.sortByABC,
+                    R.drawable.sort_abc,
+                    state.sortingByName,
+                    {
+                        callBacks.onSortByABC()
+                        onDismissRequest()
+                    }
+                )
+                SortMenuItem(
+                    R.string.sortByUserPref,
+                    R.drawable.sort_user,
+                    !state.sortingByName,
+                    {
+                        callBacks.onSortByUserPref()
+                        onDismissRequest()
+                    }
+                )
             }
+
+//            ConfirmDeleteDropdownMenu(
+//                deleteAllMenuExpanded,
+//                R.string.deleteAll,
+//                { deleteAllMenuExpanded = false },
+//                {
+//                    callBacks.onDeleteAll()
+//                    onDismissRequest()
+//                },
+//                { deleteAllMenuExpanded = false }
+//            )
+//
+//            ConfirmDeleteDropdownMenu(
+//                clearBoughtMenuExpanded,
+//                R.string.clearBought,
+//                { clearBoughtMenuExpanded = false },
+//                {
+//                    callBacks.onClearBought()
+//                    onDismissRequest()
+//                },
+//                { clearBoughtMenuExpanded = false }
+//            )
         }
     }
 }
@@ -125,50 +174,66 @@ private fun ProductBottomSheetString(
             contentDescription = null,
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 12.dp)
         )
-        if
-            (substring == null) {
+        if (substring == null) { Text(
+            text = stringResource(stringRes),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .wrapContentHeight(Alignment.CenterVertically)
+        ) } else { Column(
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .wrapContentHeight(Alignment.CenterVertically)
+        ) {
             Text(
                 text = stringResource(stringRes),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .wrapContentHeight(Alignment.CenterVertically)
             )
-        } else {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .wrapContentHeight(Alignment.CenterVertically)
-            ) {
-                Text(
-                    text = stringResource(stringRes),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = substring,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GreenLight
-                )
-            }
-        }
+            Text(
+                text = substring,
+                style = MaterialTheme.typography.bodyMedium,
+                color = GreenLight
+            )
+        } }
         if (iconEndRes != null) {
             Icon(
                 painter = painterResource(iconEndRes),
                 contentDescription = null,
                 modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 16.dp)
-            )
-        }
+            ) }
     }
 }
 
+//@Composable
+//private fun ConfirmDeleteDropdownMenu(
+//    menuExpanded: Boolean,
+//    text: Int,
+//    onDismissRequest: () -> Unit,
+//    onConfirm: () -> Unit,
+//    onCancel: () -> Unit
+//) {
+//    DropdownMenu(
+//        expanded = menuExpanded,
+//        onDismissRequest = onDismissRequest,
+//        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+//    ){
+//        Column() {
+//            Icon(painter = painterResource(R.drawable.attention), contentDescription = null)
+//            Text(text = stringResource(text))
+//            Row(){
+//                PlainButton(R.string.delete_button_text, onConfirm)
+//                PlainButton(R.string.cancel_button_text, onCancel)
+//            }
+//        }
+//    }
+//}
+
+
 class ProductBottomSheetCallBacks(
-    val onDismissRequest: () -> Unit,
     val onSortByABC: () -> Unit,
     val onSortByUserPref: () -> Unit,
-    val onDeleteAll: () -> Unit,
-    val onClearBought: () -> Unit,
 )

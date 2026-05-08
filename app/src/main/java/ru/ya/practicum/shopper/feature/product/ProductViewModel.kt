@@ -14,6 +14,7 @@ import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
+import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import java.io.IOException
 import java.sql.SQLException
 
@@ -21,7 +22,8 @@ data class ProductState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val currentListId: Int = 0
+    val currentListId: Int = 0,
+    val sortingByName: Boolean = false,
 )
 
 sealed class ProductEvent {
@@ -34,11 +36,13 @@ sealed class ProductEvent {
 
     data class ToggleBought(val product: Product, val listId: Int) : ProductEvent()
     data class LoadProducts(val listId: Int) : ProductEvent()
+    data class SwitchSorting(val byName: Boolean) : ProductEvent()
 }
 
 class ProductViewModel(
     private val application: Application,
-    private val itemRepository: ShopperItemRepository
+    private val itemRepository: ShopperItemRepository,
+    private val dataStore: ProductDataStore
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductState())
@@ -49,6 +53,14 @@ class ProductViewModel(
 
     private val defaultQuantity: String
         get() = application.getString(R.string.default_quantity)
+
+    init {
+        viewModelScope.launch {
+            dataStore.isProductsSortByName.collect {
+                res -> _state.update { it.copy(sortingByName = res) }
+            }
+        }
+    }
 
     fun onEvent(event: ProductEvent) {
         when (event) {
@@ -61,7 +73,22 @@ class ProductViewModel(
 
             is ProductEvent.ToggleBought -> toggleBought(event.product, event.listId)
             is ProductEvent.LoadProducts -> loadProducts(event.listId)
+            is ProductEvent.SwitchSorting -> switchSorting(event.byName)
         }
+    }
+
+    fun sortProductsByABC() {
+        switchSorting(true)
+    }
+
+    fun sortProductByUserPref() {
+        switchSorting(false)
+    }
+
+    private fun switchSorting(byName: Boolean) {
+        viewModelScope.launch { dataStore.setProductsSortByName(byName) }
+        _state.update { it.copy(sortingByName = byName) }
+        loadProducts(_state.value.currentListId)
     }
 
     private fun addProduct(name: String, quantity: String, unit: String, listId: Int) {
@@ -107,11 +134,29 @@ class ProductViewModel(
         }
     }
 
+    fun deleteAllProducts() {
+        viewModelScope.launch {
+            _state.value.products.forEach {
+                itemRepository.deleteItemById(it.id.toInt())
+            }
+        }
+        loadProducts(_state.value.currentListId)
+    }
+
+    fun clearBoughtProducts() {
+        viewModelScope.launch {
+            _state.value.products.filter{it.isBought}.forEach {
+                itemRepository.deleteItemById(it.id.toInt())
+            }
+        }
+        loadProducts(_state.value.currentListId)
+    }
+
     private fun loadProducts(listId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
 
-            itemRepository.getAllItems(listId)
+            itemRepository.getAllItems(listId, _state.value.sortingByName)
                 .catch { e -> handleLoadError(e) }
                 .collect { resource -> handleLoadResult(resource) }
         }
