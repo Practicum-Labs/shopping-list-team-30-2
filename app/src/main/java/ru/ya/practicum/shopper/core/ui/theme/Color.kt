@@ -20,6 +20,8 @@ val InverseOnSurfaceLight = Color(ColorHex.INVERSE_ON_SURFACE_LIGHT_HEX)
 
 val OutlineLight = Color(ColorHex.OUTLINE_LIGHT_HEX)
 
+val SurfaceContainerHighestLight = Color(ColorHex.SURFACE_CONTAINER_HIGHEST_LIGHT_HEX)
+
 val PrimaryDark = Color(ColorHex.PRIMARY_DARK_HEX)
 val PrimaryContainerDark = Color(ColorHex.PRIMARY_CONTAINER_DARK_HEX)
 val OnPrimaryContainerDark = Color(ColorHex.ON_PRIMARY_CONTAINER_DARK_HEX)
@@ -37,3 +39,5 @@ val OnSurfaceVariantDark = Color(ColorHex.ON_SURFACE_VARIANT_DARK_HEX)
 val InverseOnSurfaceDark = Color(ColorHex.INVERSE_ON_SURFACE_DARK_HEX)
 
 val OutlineDark = Color(ColorHex.OUTLINE_DARK_HEX)
+
+val SurfaceContainerHighestDark = Color(ColorHex.SURFACE_CONTAINER_HIGHEST_DARK_HEX)
