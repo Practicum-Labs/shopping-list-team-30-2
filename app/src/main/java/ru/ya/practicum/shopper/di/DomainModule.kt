@@ -5,6 +5,7 @@ import ru.ya.practicum.shopper.data.impl.ShopperItemRepositoryImpl
 import ru.ya.practicum.shopper.data.impl.ShopperListRepositoryImpl
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
+import ru.ya.practicum.shopper.feature.product.ProductViewModel
 
 val domainModule = module {
     single<ShopperItemRepository> {
@@ -14,4 +15,6 @@ val domainModule = module {
     single<ShopperListRepository> {
         ShopperListRepositoryImpl(get(), get())
     }
+
+    factory { ProductViewModel(get(), get()) }
 }
