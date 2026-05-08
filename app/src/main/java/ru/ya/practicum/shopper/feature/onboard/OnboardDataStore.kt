@@ -19,7 +19,6 @@ class OnboardDataStore(private val context: Context) {
     companion object {
         private val ONBOARD_COMPLETED_KEY = booleanPreferencesKey("onboard_completed")
         private val USER_ID_KEY = stringPreferencesKey("user_id")
-        private val DARK_THEME_KEY = booleanPreferencesKey("dark_theme")
     }
 
     val isOnboardCompleted: Flow<Boolean> = context.dataStore.data
@@ -30,17 +29,6 @@ class OnboardDataStore(private val context: Context) {
     suspend fun setOnboardCompleted(completed: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[ONBOARD_COMPLETED_KEY] = completed
-        }
-    }
-
-    val isDarkTheme: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[DARK_THEME_KEY] ?: false
-        }
-
-    suspend fun setDarkTheme(isDark: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[DARK_THEME_KEY] = isDark
         }
     }
 

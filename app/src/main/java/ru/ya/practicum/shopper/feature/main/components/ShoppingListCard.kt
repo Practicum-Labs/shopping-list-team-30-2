@@ -32,7 +32,7 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 fun ShoppingListCard(
     shoppingList: ShoppingList,
     onClick: (ShoppingList) -> Unit,
-    onIconClick: ((ShoppingList) -> Unit)? = null, // Добавь колбэк для клика по иконке
+    onIconClick: ((ShoppingList) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val iconResId = getValidIconResId(shoppingList.iconResId)

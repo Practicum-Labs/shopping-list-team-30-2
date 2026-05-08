@@ -30,12 +30,15 @@ class ShopperItemRepositoryImpl(
         dao.update(mapper.toEntity(item, listId))
     }
 
-    override fun getAllItems(listId: Int): Flow<Resource<List<ShopperItem>>> = flow {
-        dao.getItems(listId)
-            .map { entities ->
-                Resource.Success(entities.map { mapper.toDomain(it) })
-            }
+    override fun getAllItems(listId: Int, orderByName: Boolean): Flow<Resource<List<ShopperItem>>> = flow {
+        val queryResult =
+            if (orderByName) dao.getItemsOrderedByName(listId) else dao.getItems(listId)
+
+        queryResult.map { entities ->
+            Resource.Success(entities.map { mapper.toDomain(it) })
+        }
             .collect { emit(it) }
 
     }
+
 }

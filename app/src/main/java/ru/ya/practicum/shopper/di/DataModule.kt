@@ -5,16 +5,18 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import ru.ya.practicum.shopper.core.ui.theme.ThemeDataStore
 import ru.ya.practicum.shopper.data.AppDataBase
 import ru.ya.practicum.shopper.data.converter.ShopperItemMapper
 import ru.ya.practicum.shopper.data.converter.ShopperListMapper
 import ru.ya.practicum.shopper.data.local.dao.ShopperItemDao
 import ru.ya.practicum.shopper.data.local.dao.ShopperListsDao
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
+import ru.ya.practicum.shopper.feature.product.ProductDataStore
 
 private val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
             "ALTER TABLE shopper_lists ADD COLUMN userId TEXT NOT NULL DEFAULT ''"
         )
     }
@@ -40,4 +42,8 @@ val dataModule = module {
     single { ShopperListMapper() }
 
     single { OnboardDataStore(androidContext()) }
+
+    single { ThemeDataStore(androidContext()) }
+
+    single { ProductDataStore(androidContext()) }
 }
