@@ -34,18 +34,20 @@ import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.ui.components.buttons.PlainButton
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
+import ru.ya.practicum.shopper.feature.product.ProductState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductBottomSheet(
     sheetState: SheetState,
+    state: ProductState,
     onDismissRequest: () -> Unit,
     callBacks: ProductBottomSheetCallBacks,
 ) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
     var deleteAllMenuExpanded by remember { mutableStateOf(false) }
     var clearBoughtMenuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = "по алфавиту" // для демонстрации. После привязки стейта заменю на значение стейта
+    val currentSortString = if (state.sortingByName) "по алфавиту" else "пользовательская"
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -53,6 +55,7 @@ fun ProductBottomSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
+
     ) {
         Box() {
             Column() {
@@ -84,12 +87,23 @@ fun ProductBottomSheet(
                 modifier = Modifier.align(Alignment.TopEnd),
                 offset = DpOffset(x = (96).dp, y = 96.dp)
             ) {
-                SortMenuItem(R.string.sortByABC, R.drawable.sort_abc, true, callBacks.onSortByABC)
+                SortMenuItem(
+                    R.string.sortByABC,
+                    R.drawable.sort_abc,
+                    state.sortingByName,
+                    {
+                        callBacks.onSortByABC()
+                        onDismissRequest()
+                    }
+                )
                 SortMenuItem(
                     R.string.sortByUserPref,
                     R.drawable.sort_user,
-                    false,
-                    callBacks.onSortByUserPref
+                    !state.sortingByName,
+                    {
+                        callBacks.onSortByUserPref()
+                        onDismissRequest()
+                    }
                 )
             }
 
@@ -97,7 +111,10 @@ fun ProductBottomSheet(
                 deleteAllMenuExpanded,
                 R.string.deleteAll,
                 { deleteAllMenuExpanded = false },
-                callBacks.onDeleteAll,
+                {
+                    callBacks.onDeleteAll()
+                    onDismissRequest()
+                },
                 { deleteAllMenuExpanded = false }
             )
 
@@ -105,7 +122,10 @@ fun ProductBottomSheet(
                 clearBoughtMenuExpanded,
                 R.string.clearBought,
                 { clearBoughtMenuExpanded = false },
-                callBacks.onClearBought,
+                {
+                    callBacks.onClearBought()
+                    onDismissRequest()
+                },
                 { clearBoughtMenuExpanded = false }
             )
         }

@@ -8,6 +8,7 @@ import ru.ya.practicum.shopper.data.converter.ShopperItemMapper
 import ru.ya.practicum.shopper.data.converter.ShopperListMapper
 import ru.ya.practicum.shopper.data.local.dao.ShopperItemDao
 import ru.ya.practicum.shopper.data.local.dao.ShopperListsDao
+import ru.ya.practicum.shopper.feature.product.ProductDataStore
 
 val dataModule = module {
     single<AppDataBase> {
@@ -22,4 +23,5 @@ val dataModule = module {
     single<ShopperListsDao> { get<AppDataBase>().shopperListsDao() }
     single { ShopperItemMapper() }
     single { ShopperListMapper() }
+    single { ProductDataStore(get()) }
 }

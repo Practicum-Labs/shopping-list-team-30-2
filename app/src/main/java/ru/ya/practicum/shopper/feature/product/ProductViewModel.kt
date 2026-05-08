@@ -14,6 +14,7 @@ import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
+import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import java.io.IOException
 import java.sql.SQLException
 
@@ -40,7 +41,8 @@ sealed class ProductEvent {
 
 class ProductViewModel(
     private val application: Application,
-    private val itemRepository: ShopperItemRepository
+    private val itemRepository: ShopperItemRepository,
+    private val dataStore: ProductDataStore
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductState())
@@ -51,6 +53,14 @@ class ProductViewModel(
 
     private val defaultQuantity: String
         get() = application.getString(R.string.default_quantity)
+
+    init {
+        viewModelScope.launch {
+            dataStore.isProductsSortByName.collect {
+                res -> _state.update { it.copy(sortingByName = res) }
+            }
+        }
+    }
 
     fun onEvent(event: ProductEvent) {
         when (event) {
@@ -76,7 +86,7 @@ class ProductViewModel(
     }
 
     private fun switchSorting(byName: Boolean) {
-        //todo сохранение настройки сортировки в шаред преференс
+        viewModelScope.launch { dataStore.setProductsSortByName(byName) }
         _state.update { it.copy(sortingByName = byName) }
         loadProducts(_state.value.currentListId)
     }

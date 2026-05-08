@@ -90,6 +90,7 @@ fun ProductScreen(
     if (showProductBottomSheet) {
         ProductBottomSheet(
             sheetState,
+            state,
             {showProductBottomSheet = false},
             bottomSheetCallBacks(viewModel)
         )
