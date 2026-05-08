@@ -14,7 +14,6 @@ import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
-import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import java.io.IOException
 import java.sql.SQLException
 
@@ -39,6 +38,7 @@ sealed class ProductEvent {
     data class SwitchSorting(val byName: Boolean) : ProductEvent()
 }
 
+@Suppress("TooManyFunctions")
 class ProductViewModel(
     private val application: Application,
     private val itemRepository: ShopperItemRepository,
@@ -54,36 +54,36 @@ class ProductViewModel(
     private val defaultQuantity: String
         get() = application.getString(R.string.default_quantity)
 
+    private val mapper = ProductMapper(defaultUnit, defaultQuantity)
+
     init {
         viewModelScope.launch {
-            dataStore.isProductsSortByName.collect {
-                res -> _state.update { it.copy(sortingByName = res) }
+            dataStore.isProductsSortByName.collect { res ->
+                _state.update { it.copy(sortingByName = res) }
             }
         }
     }
 
     fun onEvent(event: ProductEvent) {
         when (event) {
-            is ProductEvent.AddProduct -> addProduct(
+            is ProductEvent.AddProduct -> handleAddProduct(
                 event.name,
                 event.quantity,
                 event.unit,
                 event.listId
             )
 
-            is ProductEvent.ToggleBought -> toggleBought(event.product, event.listId)
+            is ProductEvent.ToggleBought -> handleToggleBought(event.product, event.listId)
             is ProductEvent.LoadProducts -> loadProducts(event.listId)
             is ProductEvent.SwitchSorting -> switchSorting(event.byName)
         }
     }
 
-    fun sortProductsByABC() {
-        switchSorting(true)
-    }
+    fun sortProductsByABC() = switchSorting(true)
+    fun sortProductByUserPref() = switchSorting(false)
 
-    fun sortProductByUserPref() {
-        switchSorting(false)
-    }
+    fun deleteAllProducts() = performDeleteAll()
+    fun clearBoughtProducts() = performClearBought()
 
     private fun switchSorting(byName: Boolean) {
         viewModelScope.launch { dataStore.setProductsSortByName(byName) }
@@ -91,7 +91,7 @@ class ProductViewModel(
         loadProducts(_state.value.currentListId)
     }
 
-    private fun addProduct(name: String, quantity: String, unit: String, listId: Int) {
+    private fun handleAddProduct(name: String, quantity: String, unit: String, listId: Int) {
         viewModelScope.launch {
             try {
                 val item = ShopperItem(
@@ -112,7 +112,7 @@ class ProductViewModel(
         }
     }
 
-    private fun toggleBought(product: Product, listId: Int) {
+    private fun handleToggleBought(product: Product, listId: Int) {
         viewModelScope.launch {
             try {
                 val item = ShopperItem(
@@ -134,28 +134,27 @@ class ProductViewModel(
         }
     }
 
-    fun deleteAllProducts() {
+    private fun performDeleteAll() {
         viewModelScope.launch {
             _state.value.products.forEach {
                 itemRepository.deleteItemById(it.id.toInt())
             }
+            loadProducts(_state.value.currentListId)
         }
-        loadProducts(_state.value.currentListId)
     }
 
-    fun clearBoughtProducts() {
+    private fun performClearBought() {
         viewModelScope.launch {
-            _state.value.products.filter{it.isBought}.forEach {
+            _state.value.products.filter { it.isBought }.forEach {
                 itemRepository.deleteItemById(it.id.toInt())
             }
+            loadProducts(_state.value.currentListId)
         }
-        loadProducts(_state.value.currentListId)
     }
 
     private fun loadProducts(listId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
-
             itemRepository.getAllItems(listId, _state.value.sortingByName)
                 .catch { e -> handleLoadError(e) }
                 .collect { resource -> handleLoadResult(resource) }
@@ -164,34 +163,43 @@ class ProductViewModel(
 
     private fun handleLoadError(e: Throwable) {
         _state.update {
-            it.copy(
-                isLoading = false,
-                error = "Ошибка загрузки товаров: ${e.message}"
-            )
+            it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
         }
     }
 
     private fun handleLoadResult(resource: Resource<List<ShopperItem>>) {
         when (resource) {
             is Resource.Success -> {
-                val products = mapItemsToProducts(resource.data)
-                _state.update {
-                    it.copy(isLoading = false, products = products, error = null)
-                }
+                val products = mapper.mapItemsToProducts(resource.data)
+                _state.update { it.copy(isLoading = false, products = products, error = null) }
             }
+
             is Resource.Error -> {
-                _state.update {
-                    it.copy(isLoading = false, error = "Ошибка загрузки товаров")
-                }
+                _state.update { it.copy(isLoading = false, error = "Ошибка загрузки товаров") }
             }
         }
     }
 
-    private fun mapItemsToProducts(items: List<ShopperItem>?): List<Product> {
-        return items?.map { item -> mapItemToProduct(item) } ?: emptyList()
+//    private fun handleError(e: Exception, defaultMessage: String) {
+//        val message = when (e) {
+//            is SQLException -> "Ошибка базы данных: ${e.message}"
+//            is IOException -> "Ошибка ввода-вывода: ${e.message}"
+//            is IllegalStateException -> "Ошибка состояния: ${e.message}"
+//            else -> "$defaultMessage: ${e.message}"
+//        }
+//        _state.update { it.copy(error = message) }
+//    }
+}
+
+private class ProductMapper(
+    private val defaultUnit: String,
+    private val defaultQuantity: String
+) {
+    fun mapItemsToProducts(items: List<ShopperItem>?): List<Product> {
+        return items?.map { mapItemToProduct(it) } ?: emptyList()
     }
 
-    private fun mapItemToProduct(item: ShopperItem): Product {
+    fun mapItemToProduct(item: ShopperItem): Product {
         return Product(
             id = item.id.toLong(),
             name = item.name,

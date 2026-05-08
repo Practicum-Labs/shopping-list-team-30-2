@@ -10,8 +10,8 @@ import ru.ya.practicum.shopper.data.local.entity.ShopperListsEntity
 
 @Dao
 interface ShopperListsDao {
-    @Query("SELECT * FROM ${ShopperListsEntity.TABLE_NAME} ORDER BY insertTime DESC")
-    fun getAllLists(): Flow<List<ShopperListsEntity>>
+    @Query("SELECT * FROM ${ShopperListsEntity.TABLE_NAME} WHERE userId = :userId ORDER BY insertTime DESC")
+    fun getAllLists(userId: String): Flow<List<ShopperListsEntity>>
 
     @Query("SELECT * FROM ${ShopperListsEntity.TABLE_NAME} WHERE id = :id")
     suspend fun getListById(id: Int): ShopperListsEntity?

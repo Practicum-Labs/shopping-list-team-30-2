@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "product_setting")
 
-class ProductDataStore (private val context: Context) {
+class ProductDataStore(private val context: Context) {
 
     companion object {
         private val PRODUCTS_SORT_BY_NAME_KEY = booleanPreferencesKey("products_sore_by_name")
@@ -21,8 +21,8 @@ class ProductDataStore (private val context: Context) {
         .map { preferences -> preferences[PRODUCTS_SORT_BY_NAME_KEY] ?: false }
 
     suspend fun setProductsSortByName(byName: Boolean) {
-        context.dataStore.edit {
-            preferences -> preferences[PRODUCTS_SORT_BY_NAME_KEY] = byName
+        context.dataStore.edit { preferences ->
+            preferences[PRODUCTS_SORT_BY_NAME_KEY] = byName
         }
     }
 
