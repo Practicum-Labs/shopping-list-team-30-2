@@ -29,109 +29,121 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
-import ru.ya.practicum.shopper.core.ui.components.buttons.PlainButton
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
 import ru.ya.practicum.shopper.feature.product.ProductState
 
+data class ProductBottomSheetCallBacks(
+    val onSortByABC: () -> Unit,
+    val onSortByUserPref: () -> Unit,
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+data class ProductBottomSheetConfig(
+    val sheetState: SheetState,
+    val state: ProductState,
+    val onDismissRequest: () -> Unit,
+    val onDeleteAll: () -> Unit,
+    val onClearBought: () -> Unit,
+    val callBacks: ProductBottomSheetCallBacks
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductBottomSheet(
-    sheetState: SheetState,
-    state: ProductState,
-    onDismissRequest: () -> Unit,
-    onDeleteAll: () -> Unit,
-    onClearBought: () -> Unit,
-    callBacks: ProductBottomSheetCallBacks,
-) {
+fun ProductBottomSheet(config: ProductBottomSheetConfig) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
-    var deleteAllMenuExpanded by remember { mutableStateOf(false) }
-    var clearBoughtMenuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = if (state.sortingByName) "по алфавиту" else "пользовательская"
+    val currentSortString = if (config.state.sortingByName) "по алфавиту" else "пользовательская"
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
+        onDismissRequest = config.onDismissRequest,
+        sheetState = config.sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
-
     ) {
-        Box() {
-            Column() {
-                ProductBottomSheetString(
-                    R.drawable.sort,
-                    R.string.sort,
-                    currentSortString,
-                    { sortMenuExpanded = true },
-                    R.drawable.arrow_right
-                )
-                ProductBottomSheetString(
-                    R.drawable.delete,
-                    R.string.deleteAll,
-                    null,
-                    onDeleteAll
-                )
-                ProductBottomSheetString(
-                    R.drawable.clear,
-                    R.string.clearBought,
-                    null,
-                    onClearBought
-                )
-            }
+        Box {
+            BottomSheetMenuItems(
+                currentSortString = currentSortString,
+                onSortClick = { sortMenuExpanded = true },
+                onDeleteAll = config.onDeleteAll,
+                onClearBought = config.onClearBought
+            )
 
-            DropdownMenu(
+            SortMenu(
                 expanded = sortMenuExpanded,
-                onDismissRequest = { sortMenuExpanded = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                modifier = Modifier.align(Alignment.TopEnd),
-                offset = DpOffset(x = (96).dp, y = 96.dp)
-            ) {
-                SortMenuItem(
-                    R.string.sortByABC,
-                    R.drawable.sort_abc,
-                    state.sortingByName,
-                    {
-                        callBacks.onSortByABC()
-                        onDismissRequest()
-                    }
-                )
-                SortMenuItem(
-                    R.string.sortByUserPref,
-                    R.drawable.sort_user,
-                    !state.sortingByName,
-                    {
-                        callBacks.onSortByUserPref()
-                        onDismissRequest()
-                    }
-                )
-            }
-
-//            ConfirmDeleteDropdownMenu(
-//                deleteAllMenuExpanded,
-//                R.string.deleteAll,
-//                { deleteAllMenuExpanded = false },
-//                {
-//                    callBacks.onDeleteAll()
-//                    onDismissRequest()
-//                },
-//                { deleteAllMenuExpanded = false }
-//            )
-//
-//            ConfirmDeleteDropdownMenu(
-//                clearBoughtMenuExpanded,
-//                R.string.clearBought,
-//                { clearBoughtMenuExpanded = false },
-//                {
-//                    callBacks.onClearBought()
-//                    onDismissRequest()
-//                },
-//                { clearBoughtMenuExpanded = false }
-//            )
+                sortingByName = config.state.sortingByName,
+                onDismiss = { sortMenuExpanded = false },
+                onSortByABC = {
+                    config.callBacks.onSortByABC()
+                    config.onDismissRequest()
+                },
+                onSortByUserPref = {
+                    config.callBacks.onSortByUserPref()
+                    config.onDismissRequest()
+                }
+            )
         }
+    }
+}
+
+@Composable
+private fun BottomSheetMenuItems(
+    currentSortString: String,
+    onSortClick: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onClearBought: () -> Unit
+) {
+    Column {
+        ProductBottomSheetString(
+            iconRes = R.drawable.sort,
+            stringRes = R.string.sort,
+            substring = currentSortString,
+            onStringClick = onSortClick,
+            iconEndRes = R.drawable.arrow_right
+        )
+        ProductBottomSheetString(
+            iconRes = R.drawable.delete,
+            stringRes = R.string.deleteAll,
+            substring = null,
+            onStringClick = onDeleteAll
+        )
+        ProductBottomSheetString(
+            iconRes = R.drawable.clear,
+            stringRes = R.string.clearBought,
+            substring = null,
+            onStringClick = onClearBought
+        )
+    }
+}
+
+@Composable
+private fun SortMenu(
+    expanded: Boolean,
+    sortingByName: Boolean,
+    onDismiss: () -> Unit,
+    onSortByABC: () -> Unit,
+    onSortByUserPref: () -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        offset = DpOffset(x = 96.dp, y = 96.dp)
+    ) {
+        SortMenuItem(
+            stringRes = R.string.sortByABC,
+            iconRes = R.drawable.sort_abc,
+            isSelected = sortingByName,
+            onClick = onSortByABC
+        )
+        SortMenuItem(
+            stringRes = R.string.sortByUserPref,
+            iconRes = R.drawable.sort_user,
+            isSelected = !sortingByName,
+            onClick = onSortByUserPref
+        )
     }
 }
 
@@ -174,66 +186,43 @@ private fun ProductBottomSheetString(
             contentDescription = null,
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 12.dp)
         )
-        if (substring == null) { Text(
-            text = stringResource(stringRes),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .weight(1f)
-                .height(56.dp)
-                .wrapContentHeight(Alignment.CenterVertically)
-        ) } else { Column(
-            modifier = Modifier
-                .weight(1f)
-                .height(56.dp)
-                .wrapContentHeight(Alignment.CenterVertically)
-        ) {
+
+        if (substring == null) {
             Text(
                 text = stringResource(stringRes),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
             )
-            Text(
-                text = substring,
-                style = MaterialTheme.typography.bodyMedium,
-                color = GreenLight
-            )
-        } }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+            ) {
+                Text(
+                    text = stringResource(stringRes),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = substring,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GreenLight
+                )
+            }
+        }
+
         if (iconEndRes != null) {
             Icon(
                 painter = painterResource(iconEndRes),
                 contentDescription = null,
                 modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 16.dp)
-            ) }
+            )
+        }
     }
 }
-
-//@Composable
-//private fun ConfirmDeleteDropdownMenu(
-//    menuExpanded: Boolean,
-//    text: Int,
-//    onDismissRequest: () -> Unit,
-//    onConfirm: () -> Unit,
-//    onCancel: () -> Unit
-//) {
-//    DropdownMenu(
-//        expanded = menuExpanded,
-//        onDismissRequest = onDismissRequest,
-//        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-//    ){
-//        Column() {
-//            Icon(painter = painterResource(R.drawable.attention), contentDescription = null)
-//            Text(text = stringResource(text))
-//            Row(){
-//                PlainButton(R.string.delete_button_text, onConfirm)
-//                PlainButton(R.string.cancel_button_text, onCancel)
-//            }
-//        }
-//    }
-//}
-
-
-class ProductBottomSheetCallBacks(
-    val onSortByABC: () -> Unit,
-    val onSortByUserPref: () -> Unit,
-)

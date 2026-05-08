@@ -24,12 +24,14 @@ import ru.ya.practicum.shopper.feature.product.components.ConfirmDeleteDialog
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
+import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetConfig
 import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
 import ru.ya.practicum.shopper.feature.product.components.ProductTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 fun ProductScreen(
     listId: Int,
@@ -39,12 +41,11 @@ fun ProductScreen(
     viewModel: ProductViewModel = koinViewModel()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showAddProductDialog by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsState()
     var showAddProductSheet by remember { mutableStateOf(false) }
     var showProductBottomSheet by remember { mutableStateOf(false) }
-    var showDialogDeleteAll by remember {mutableStateOf(false)}
-    var showDialogClearBought by remember {mutableStateOf(false)}
+    var showDialogDeleteAll by remember { mutableStateOf(false) }
+    var showDialogClearBought by remember { mutableStateOf(false) }
 
     LaunchedEffect(listId) {
         viewModel.onEvent(ProductEvent.LoadProducts(listId))
@@ -93,27 +94,37 @@ fun ProductScreen(
 
     if (showProductBottomSheet) {
         ProductBottomSheet(
-            sheetState,
-            state,
-            {showProductBottomSheet = false},
-            {
-                showDialogDeleteAll = true
-                showProductBottomSheet = false
-            },
-            {
-                showDialogClearBought = true
-                showProductBottomSheet = false
-            },
-            bottomSheetCallBacks(viewModel)
+            config = ProductBottomSheetConfig(
+                sheetState = sheetState,
+                state = state,
+                onDismissRequest = { showProductBottomSheet = false },
+                onDeleteAll = {
+                    showDialogDeleteAll = true
+                    showProductBottomSheet = false
+                },
+                onClearBought = {
+                    showDialogClearBought = true
+                    showProductBottomSheet = false
+                },
+                callBacks = bottomSheetCallBacks(viewModel)
+            )
         )
     }
 
     if (showDialogDeleteAll) {
-        ConfirmDeleteDialog(R.string.deleteAllConfirm, {showDialogDeleteAll = false}, viewModel::deleteAllProducts)
+        ConfirmDeleteDialog(
+            R.string.deleteAllConfirm,
+            { showDialogDeleteAll = false },
+            viewModel::deleteAllProducts
+        )
     }
 
     if (showDialogClearBought) {
-        ConfirmDeleteDialog(R.string.clearBoughtConfirm, {showDialogClearBought = false}, viewModel::clearBoughtProducts)
+        ConfirmDeleteDialog(
+            R.string.clearBoughtConfirm,
+            { showDialogClearBought = false },
+            viewModel::clearBoughtProducts
+        )
     }
 }
 
@@ -142,7 +153,7 @@ private fun ProductScreenContent(
     }
 }
 
-fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
+private fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
     return ProductBottomSheetCallBacks(
         viewModel::sortProductsByABC,
         viewModel::sortProductByUserPref

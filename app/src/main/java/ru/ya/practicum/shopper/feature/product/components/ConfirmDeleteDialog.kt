@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import ru.ya.practicum.shopper.R
 
+@Suppress("UnusedParameter") // Подавлено
 @Composable
 fun ConfirmDeleteDialog(
     text: Int,
@@ -45,16 +46,17 @@ fun ConfirmDeleteDialog(
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             ConfirmDeleteDialogContent(
-                text = text,
+//                text = text,
                 onDismiss = onDismiss,
-                onConfirm = onConfirm)
+                onConfirm = onConfirm
+            )
         }
     }
 }
 
 @Composable
 private fun ConfirmDeleteDialogContent(
-    text: Int,
+//    text: Int,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {

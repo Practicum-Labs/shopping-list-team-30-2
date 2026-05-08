@@ -10,5 +10,5 @@ interface ShopperListRepository {
     suspend fun deleteShopperListById(id: Int)
     suspend fun updateShopperList(shoppingList: ShopperList)
     suspend fun getShopperListById(id: Int): ShopperList?
-    fun getAllShopperLists(): Flow<Resource<List<ShopperList>>>
+    fun getAllShopperLists(userId: String): Flow<Resource<List<ShopperList>>>
 }

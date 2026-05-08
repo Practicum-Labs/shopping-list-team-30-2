@@ -120,7 +120,7 @@ fun SubmitButton(
         modifier = Modifier.fillMaxWidth(),
         enabled = !isLoading,
         colors = ButtonDefaults.buttonColors(
-            contentColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         )
     ) {
         if (isLoading) {
@@ -133,7 +133,7 @@ fun SubmitButton(
                     stringResource(R.string.sign_in)
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

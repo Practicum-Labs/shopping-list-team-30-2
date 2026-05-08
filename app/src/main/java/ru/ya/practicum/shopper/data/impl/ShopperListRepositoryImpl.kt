@@ -34,8 +34,8 @@ class ShopperListRepositoryImpl(
         return entity?.let { mapper.toDomain(it) }
     }
 
-    override fun getAllShopperLists(): Flow<Resource<List<ShopperList>>> {
-        return dao.getAllLists()
+    override fun getAllShopperLists(userId: String): Flow<Resource<List<ShopperList>>> {
+        return dao.getAllLists(userId)
             .map { entities ->
                 Resource.Success(entities.map { mapper.toDomain(it) })
             }

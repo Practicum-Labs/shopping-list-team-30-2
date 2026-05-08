@@ -38,6 +38,7 @@ class OnboardViewModel(
         if (_state.value.isNavigatingToMain) return
 
         viewModelScope.launch {
+            dataStore.getOrCreateUserId()
             dataStore.setOnboardCompleted(true)
             _state.update { it.copy(isNavigatingToMain = true) }
         }
