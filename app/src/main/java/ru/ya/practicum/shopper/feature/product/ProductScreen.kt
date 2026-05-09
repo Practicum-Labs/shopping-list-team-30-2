@@ -7,6 +7,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,20 +42,36 @@ fun ProductScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = koinViewModel()
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val state by viewModel.state.collectAsState()
+    val effectFlow = viewModel.effect
+    val snackbarHostState = remember { SnackbarHostState() }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     var showAddProductSheet by remember { mutableStateOf(false) }
     var showProductBottomSheet by remember { mutableStateOf(false) }
     var showDialogDeleteAll by remember { mutableStateOf(false) }
     var showDialogClearBought by remember { mutableStateOf(false) }
 
-    LaunchedEffect(listId) {
-        viewModel.onEvent(ProductEvent.LoadProducts(listId))
+    LaunchedEffect(Unit) {
+        viewModel.onIntent(ProductIntent.LoadProducts(listId))
+    }
+
+    LaunchedEffect(Unit) {
+        effectFlow.collect { effect ->
+            when (effect) {
+                is ProductEffect.ShowError -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+
+                is ProductEffect.NavigateBack -> {}
+            }
+        }
     }
 
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             ProductTopBar(
                 title = listName,
@@ -70,7 +88,7 @@ fun ProductScreen(
             state = state,
             innerPadding = innerPadding,
             onProductClick = { product ->
-                viewModel.onEvent(ProductEvent.ToggleBought(product, listId))
+                viewModel.onIntent(ProductIntent.ToggleProductBought(product, listId))
             }
         )
     }
@@ -79,8 +97,8 @@ fun ProductScreen(
         ProductAddBottomSheet(
             onDismiss = { showAddProductSheet = false },
             onAddProduct = { name, quantity, unit ->
-                viewModel.onEvent(
-                    ProductEvent.AddProduct(
+                viewModel.onIntent(
+                    ProductIntent.AddProduct(
                         name = name,
                         quantity = quantity,
                         unit = unit,
@@ -106,7 +124,10 @@ fun ProductScreen(
                     showDialogClearBought = true
                     showProductBottomSheet = false
                 },
-                callBacks = bottomSheetCallBacks(viewModel)
+                callBacks = ProductBottomSheetCallBacks(
+                    onSortByABC = { viewModel.onIntent(ProductIntent.ChangeSorting(true)) },
+                    onSortByUserPref = { viewModel.onIntent(ProductIntent.ChangeSorting(false)) }
+                )
             )
         )
     }
@@ -115,7 +136,7 @@ fun ProductScreen(
         ConfirmDeleteDialog(
             R.string.deleteAllConfirm,
             { showDialogDeleteAll = false },
-            viewModel::deleteAllProducts
+            { viewModel.onIntent(ProductIntent.DeleteAllProducts) }
         )
     }
 
@@ -123,19 +144,18 @@ fun ProductScreen(
         ConfirmDeleteDialog(
             R.string.clearBoughtConfirm,
             { showDialogClearBought = false },
-            viewModel::clearBoughtProducts
+            { viewModel.onIntent(ProductIntent.ClearBoughtProducts) }
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductScreenContent(
-    state: ProductState,
+    state: ProductViewState,
     innerPadding: PaddingValues,
     onProductClick: (Product) -> Unit
 ) {
-    if (state.products.isEmpty()) {
+    if (state.products.isEmpty() && !state.isLoading) {
         ProductEmptyContent(
             modifier = Modifier
                 .fillMaxSize()
@@ -151,11 +171,4 @@ private fun ProductScreenContent(
                 .padding(innerPadding)
         )
     }
-}
-
-private fun bottomSheetCallBacks(viewModel: ProductViewModel): ProductBottomSheetCallBacks {
-    return ProductBottomSheetCallBacks(
-        viewModel::sortProductsByABC,
-        viewModel::sortProductByUserPref
-    )
 }
