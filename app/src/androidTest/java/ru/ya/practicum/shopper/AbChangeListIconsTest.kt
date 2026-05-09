@@ -1,7 +1,8 @@
 package ru.ya.practicum.shopper
 
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,10 +15,10 @@ import org.junit.Test
 import ru.ya.practicum.shopper.feature.auth.AuthDataStore
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 
-class MainScreenCreateListsTest {
+class AbChangeListIconsTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     private val testEmail = BuildConfig.TEST_USER_EMAIL
     private val testPassword = BuildConfig.TEST_USER_PASSWORD
@@ -37,7 +38,7 @@ class MainScreenCreateListsTest {
     }
 
     @Test
-    fun createTwoShoppingLists() {
+    fun changeIconsForAllLists() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
 
         composeTestRule.setContent {
@@ -51,6 +52,7 @@ class MainScreenCreateListsTest {
         composeTestRule.waitForIdle()
         Thread.sleep(2000)
 
+        // Пропускаем онбординг
         try {
             composeTestRule.onNodeWithText("Нажмите в любом месте", ignoreCase = true)
                 .performClick()
@@ -59,6 +61,7 @@ class MainScreenCreateListsTest {
             println("Onboarding not shown")
         }
 
+        // Авторизация
         try {
             composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
                 .assertIsDisplayed()
@@ -79,38 +82,32 @@ class MainScreenCreateListsTest {
 
         Thread.sleep(2000)
         composeTestRule.waitForIdle()
-        createList("Лист покупок Один")
-        createList("Лист покупок Два")
-        createList("Лист покупок Три")
-        createList("Лист покупок Четыре")
 
-        composeTestRule.onNodeWithText("Лист покупок Один")
-            .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Лист покупок Два")
-            .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Лист покупок Три")
-            .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Лист покупок Четыре")
-            .assertIsDisplayed()
+        changeIconForList("Лист покупок Один", 1, R.drawable.ic_car)
+        changeIconForList("Лист покупок Два", 2, R.drawable.ic_pet)
+        changeIconForList("Лист покупок Три", 3, R.drawable.ic_bottle)
+        changeIconForList("Лист покупок Четыре", 4, R.drawable.ic_photocamera)
+
+        composeTestRule.onNodeWithText("Лист покупок Один").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Лист покупок Два").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Лист покупок Четыре").assertIsDisplayed()
     }
 
-    private fun createList(listName: String) {
-        composeTestRule.onNodeWithTag("fab_add_list")
+    private fun changeIconForList(listName: String, listId: Int, newIconResId: Int) {
+        println("Changing icon for: $listName")
+
+        composeTestRule.onNodeWithTag("list_icon_$listId")
             .assertIsDisplayed()
             .performClick()
 
         composeTestRule.waitForIdle()
         Thread.sleep(500)
 
-        composeTestRule.onNodeWithText("Название списка")
-            .assertIsDisplayed()
-            .performTextInput(listName)
-
-        composeTestRule.onNodeWithText("Создать")
+        composeTestRule.onNodeWithTag("icon_$newIconResId")
             .assertIsDisplayed()
             .performClick()
 
         composeTestRule.waitForIdle()
-        Thread.sleep(1000)
+        Thread.sleep(500)
     }
 }

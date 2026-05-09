@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -27,7 +29,8 @@ fun IconView(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = CircleShape
             )
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics { testTag = "icon_$icon" },
         contentAlignment = Alignment.Center
     ) {
         Image(
