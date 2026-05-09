@@ -16,6 +16,8 @@ import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
+import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import java.io.IOException
 import java.sql.SQLException
 
@@ -45,7 +47,8 @@ class ProductViewModel(
     private val application: Application,
     private val itemRepository: ShopperItemRepository,
     private val dataStore: ProductDataStore,
-    private val addProductUseCase: AddProductUseCase
+    private val addProductUseCase: AddProductUseCase,
+    private val toggleProductBoughtUseCase: ToggleProductBoughtUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductState())
@@ -76,7 +79,11 @@ class ProductViewModel(
                 event.listId
             )
 
-            is ProductEvent.ToggleBought -> handleToggleBought(event.product, event.listId)
+            is ProductEvent.ToggleBought -> handleToggleBoughtWithUseCase(
+                event.product,
+                event.listId
+            )
+
             is ProductEvent.LoadProducts -> loadProducts(event.listId)
             is ProductEvent.SwitchSorting -> switchSorting(event.byName)
         }
@@ -124,18 +131,20 @@ class ProductViewModel(
         }
     }
 
-    private fun handleToggleBought(product: Product, listId: Int) {
+    private fun handleToggleBoughtWithUseCase(product: Product, listId: Int) {
         viewModelScope.launch {
             try {
-                val item = ShopperItem(
-                    id = product.id.toInt(),
-                    name = product.name,
-                    unit = product.unit,
-                    value = product.amount.toFloatOrNull(),
-                    isBought = !product.isBought,
-                    position = 0
+                toggleProductBoughtUseCase(
+                    ToggleProductBoughtParams(
+                        productId = product.id.toInt(),
+                        listId = listId,
+                        productName = product.name,
+                        productUnit = product.unit,
+                        productValue = product.amount.toFloatOrNull(),
+                        currentIsBought = product.isBought
+                    )
                 )
-                itemRepository.updateItem(item, listId)
+                loadProducts(listId)
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
             } catch (e: IOException) {
@@ -191,16 +200,6 @@ class ProductViewModel(
             }
         }
     }
-
-//    private fun handleError(e: Exception, defaultMessage: String) {
-//        val message = when (e) {
-//            is SQLException -> "Ошибка базы данных: ${e.message}"
-//            is IOException -> "Ошибка ввода-вывода: ${e.message}"
-//            is IllegalStateException -> "Ошибка состояния: ${e.message}"
-//            else -> "$defaultMessage: ${e.message}"
-//        }
-//        _state.update { it.copy(error = message) }
-//    }
 }
 
 private class ProductMapper(

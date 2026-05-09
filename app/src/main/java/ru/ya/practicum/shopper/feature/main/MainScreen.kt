@@ -56,6 +56,7 @@ data class MainScreenDependencies(
     val itemRepository: ShopperItemRepository,
     val dataStore: OnboardDataStore
 )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -74,7 +75,11 @@ fun MainScreen(
     }
     val currentUserId = userId ?: return
     val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(dependencies.listRepository, dependencies.itemRepository, currentUserId)
+        factory = MainViewModelFactory(
+            dependencies.listRepository,
+            dependencies.itemRepository,
+            currentUserId
+        )
     )
 
     val state by viewModel.state.collectAsState()
@@ -264,9 +269,7 @@ private fun MainScreenDialogs(
             bottomSheetState = sheetState,
             onDismissRequest = { onEvent(MainEvent.HideIconPicker) },
             onIconClick = { iconResId ->
-                state.editingListId?.let { listId ->
-                    onEvent(MainEvent.UpdateListIcon(listId, iconResId))
-                }
+                onEvent(MainEvent.UpdateListIcon(state.editingListId, iconResId))
             }
         )
     }

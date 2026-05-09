@@ -6,6 +6,7 @@ import ru.ya.practicum.shopper.data.impl.ShopperListRepositoryImpl
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import ru.ya.practicum.shopper.feature.product.ProductViewModel
 
 val domainModule = module {
@@ -18,6 +19,6 @@ val domainModule = module {
     }
 
     factory { AddProductUseCase(get()) }
-
-    factory { ProductViewModel(get(), get(), get(), get()) }
+    factory { ToggleProductBoughtUseCase(get()) }
+    factory { ProductViewModel(get(), get(), get(), get(), get()) }
 }
