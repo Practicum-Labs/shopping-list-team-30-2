@@ -14,6 +14,8 @@ import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
+import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
+import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
 import java.io.IOException
 import java.sql.SQLException
 
@@ -42,7 +44,8 @@ sealed class ProductEvent {
 class ProductViewModel(
     private val application: Application,
     private val itemRepository: ShopperItemRepository,
-    private val dataStore: ProductDataStore
+    private val dataStore: ProductDataStore,
+    private val addProductUseCase: AddProductUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductState())
@@ -66,7 +69,7 @@ class ProductViewModel(
 
     fun onEvent(event: ProductEvent) {
         when (event) {
-            is ProductEvent.AddProduct -> handleAddProduct(
+            is ProductEvent.AddProduct -> handleAddProductWithUseCase(
                 event.name,
                 event.quantity,
                 event.unit,
@@ -91,23 +94,32 @@ class ProductViewModel(
         loadProducts(_state.value.currentListId)
     }
 
-    private fun handleAddProduct(name: String, quantity: String, unit: String, listId: Int) {
+    private fun handleAddProductWithUseCase(
+        name: String,
+        quantity: String,
+        unit: String,
+        listId: Int
+    ) {
         viewModelScope.launch {
             try {
-                val item = ShopperItem(
-                    name = name,
-                    unit = unit,
-                    value = quantity.toFloatOrNull(),
-                    isBought = false,
-                    position = _state.value.products.size
+                addProductUseCase(
+                    AddProductParams(
+                        name = name,
+                        unit = unit.takeIf { it.isNotBlank() },
+                        value = quantity.toFloatOrNull(),
+                        listId = listId,
+                        position = _state.value.products.size
+                    )
                 )
-                itemRepository.addItem(item, listId)
+                loadProducts(listId)
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
             } catch (e: IOException) {
                 _state.update { it.copy(error = "Ошибка ввода-вывода: ${e.message}") }
             } catch (e: IllegalStateException) {
                 _state.update { it.copy(error = "Ошибка состояния: ${e.message}") }
+            } catch (e: IllegalArgumentException) {
+                _state.update { it.copy(error = "Ошибка валидации: ${e.message}") }
             }
         }
     }
