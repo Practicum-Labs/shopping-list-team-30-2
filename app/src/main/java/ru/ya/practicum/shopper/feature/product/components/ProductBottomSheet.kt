@@ -82,7 +82,8 @@ fun ProductBottomSheet(config: ProductBottomSheetConfig) {
                 onSortByUserPref = {
                     config.callBacks.onSortByUserPref()
                     config.onDismissRequest()
-                })
+                }
+            )
         }
     }
 }

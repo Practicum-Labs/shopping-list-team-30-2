@@ -48,7 +48,7 @@ data class ProductDependencies(
     val mapProductsUseCase: MapProductsUseCase
 )
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "TooGenericExceptionCaught")
 class ProductViewModel(
     private val deps: ProductDependencies
 ) : ViewModel() {
