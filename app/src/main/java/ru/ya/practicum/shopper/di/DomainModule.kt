@@ -23,6 +23,7 @@ import ru.ya.practicum.shopper.domain.usecase.product.GetSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.MapProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
+import ru.ya.practicum.shopper.feature.main.MainUseCases
 import ru.ya.practicum.shopper.feature.main.MainViewModel
 import ru.ya.practicum.shopper.feature.product.ProductDependencies
 import ru.ya.practicum.shopper.feature.product.ProductViewModel
@@ -73,5 +74,19 @@ val domainModule = module {
 
     factory { ProductViewModel(get()) }
 
-    factory { (userId: String) -> MainViewModel(userId) }
+    factory { (userId: String) ->
+        MainViewModel(userId = userId, get())
+    }
+
+    factory {
+        MainUseCases(
+            getLists = get(),
+            createList = get(),
+            deleteList = get(),
+            updateListName = get(),
+            updateListIcon = get(),
+            deleteAllLists = get(),
+            mapLists = get()
+        )
+    }
 }

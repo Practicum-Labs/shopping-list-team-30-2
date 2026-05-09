@@ -87,7 +87,7 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     ErrorHandler(state.error, snackbarHostState) {
-        viewModel.onEvent(MainEvent.LoadLists)
+        viewModel.onIntent(MainIntent.LoadLists)
     }
 
     MainScreenContent(
@@ -96,7 +96,7 @@ fun MainScreen(
         callbacks = MainScreenCallbacks(
             onNavigateToProduct = onNavigateToProduct,
             onThemeToggle = onThemeToggle,
-            onEvent = viewModel::onEvent
+            onEvent = viewModel::onIntent
         ),
         modifier = modifier
     )
@@ -119,7 +119,7 @@ private fun ErrorHandler(
 data class MainScreenCallbacks(
     val onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     val onThemeToggle: () -> Unit,
-    val onEvent: (MainEvent) -> Unit
+    val onEvent: (MainIntent) -> Unit
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,15 +135,15 @@ private fun MainScreenContent(
     if (state.isSearchActive) {
         SearchScreen(
             query = state.searchInput,
-            onQueryChange = { callbacks.onEvent(MainEvent.UpdateSearchQuery(it)) },
-            onClose = { callbacks.onEvent(MainEvent.CloseSearch) },
-            onSearch = { callbacks.onEvent(MainEvent.PerformSearch) }
+            onQueryChange = { callbacks.onEvent(MainIntent.UpdateSearchQuery(it)) },
+            onClose = { callbacks.onEvent(MainIntent.CloseSearch) },
+            onSearch = { callbacks.onEvent(MainIntent.PerformSearch) }
         ) {
             SearchScreenBody(
                 state = state,
                 onNavigateToProduct = callbacks.onNavigateToProduct,
                 onListIconClick = { shoppingList ->
-                    callbacks.onEvent(MainEvent.ShowIconPickerForList(shoppingList.id))
+                    callbacks.onEvent(MainIntent.ShowIconPickerForList(shoppingList.id))
                 }
             )
         }
@@ -176,13 +176,13 @@ private fun MainScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             MainTopBar(
-                onSearchClick = { callbacks.onEvent(MainEvent.ToggleSearch) },
-                onDeleteClick = { callbacks.onEvent(MainEvent.ShowDeleteAllDialog) },
+                onSearchClick = { callbacks.onEvent(MainIntent.ToggleSearch) },
+                onDeleteClick = { callbacks.onEvent(MainIntent.ShowDeleteAllDialog) },
                 onThemeClick = callbacks.onThemeToggle
             )
         },
         floatingActionButton = {
-            MainCreateList(onClick = { callbacks.onEvent(MainEvent.ShowAddDialog) })
+            MainCreateList(onClick = { callbacks.onEvent(MainIntent.ShowAddDialog) })
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
@@ -195,7 +195,7 @@ private fun MainScaffold(
                 state = state,
                 onNavigateToProduct = callbacks.onNavigateToProduct,
                 onListIconClick = { shoppingList ->
-                    callbacks.onEvent(MainEvent.ShowIconPickerForList(shoppingList.id))
+                    callbacks.onEvent(MainIntent.ShowIconPickerForList(shoppingList.id))
                 }
             )
         }
@@ -257,30 +257,30 @@ private fun SearchScreenBody(
 private fun MainScreenDialogs(
     state: MainState,
     sheetState: androidx.compose.material3.SheetState,
-    onEvent: (MainEvent) -> Unit
+    onEvent: (MainIntent) -> Unit
 ) {
     if (state.showDeleteAllDialog) {
         DeleteAllListsDialog(
-            onDismiss = { onEvent(MainEvent.HideDeleteAllDialog) },
-            onConfirm = { onEvent(MainEvent.ConfirmDeleteAll) }
+            onDismiss = { onEvent(MainIntent.HideDeleteAllDialog) },
+            onConfirm = { onEvent(MainIntent.ConfirmDeleteAll) }
         )
     }
     if (state.showIconPicker && state.editingListId != null) {
         IconsModalBottomSheet(
             bottomSheetState = sheetState,
-            onDismissRequest = { onEvent(MainEvent.HideIconPicker) },
+            onDismissRequest = { onEvent(MainIntent.HideIconPicker) },
             onIconClick = { iconResId ->
-                onEvent(MainEvent.UpdateListIcon(state.editingListId, iconResId))
+                onEvent(MainIntent.UpdateListIcon(state.editingListId, iconResId))
             }
         )
     }
 
     if (state.showAddDialog) {
         AddListDialog(
-            onDismiss = { onEvent(MainEvent.HideAddDialog) },
+            onDismiss = { onEvent(MainIntent.HideAddDialog) },
             onCreate = { listName ->
                 onEvent(
-                    MainEvent.CreateList(
+                    MainIntent.CreateList(
                         name = listName,
                         iconId = state.selectedIconId
                     )
