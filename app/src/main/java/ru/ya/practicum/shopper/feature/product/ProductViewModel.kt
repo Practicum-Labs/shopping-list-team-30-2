@@ -11,14 +11,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.Product
-import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsUseCase
-import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.GetProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.GetProductsUseCase
@@ -164,46 +162,23 @@ class ProductViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
             deps.getProductsUseCase(GetProductsParams(listId, _state.value.sortingByName))
-                .catch { e -> handleLoadError(e) }
-                .collect { resource ->
-                    when (resource) {
-                        is Resource.Success -> {
-                            val products = deps.mapProductsUseCase(
-                                MapProductsParams(
-                                    items = resource.data,
-                                    defaultUnit = defaultUnit,
-                                    defaultQuantity = defaultQuantity
-                                )
-                            )
-                            _state.update {
-                                it.copy(isLoading = false, products = products, error = null)
-                            }
-                        }
-
-                        is Resource.Error -> {
-                            _state.update {
-                                it.copy(isLoading = false, error = "Ошибка загрузки товаров")
-                            }
-                        }
+                .catch { e ->
+                    _state.update {
+                        it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
                     }
                 }
-        }
-    }
-
-    fun deleteProduct(productId: Int) {
-        viewModelScope.launch {
-            try {
-                deps.deleteProductUseCase(DeleteProductParams(productId))
-                loadProducts(_state.value.currentListId)
-            } catch (e: SQLException) {
-                _state.update { it.copy(error = "Ошибка базы данных при удалении: ${e.message}") }
-            } catch (e: IOException) {
-                _state.update { it.copy(error = "Ошибка ввода-вывода при удалении: ${e.message}") }
-            } catch (e: IllegalStateException) {
-                _state.update { it.copy(error = "Ошибка состояния при удалении: ${e.message}") }
-            } catch (e: IllegalArgumentException) {
-                _state.update { it.copy(error = "Ошибка валидации при удалении: ${e.message}") }
-            }
+                .collect { shopperItems ->
+                    val products = deps.mapProductsUseCase(
+                        MapProductsParams(
+                            items = shopperItems,
+                            defaultUnit = defaultUnit,
+                            defaultQuantity = defaultQuantity
+                        )
+                    )
+                    _state.update {
+                        it.copy(isLoading = false, products = products, error = null)
+                    }
+                }
         }
     }
 
@@ -242,12 +217,6 @@ class ProductViewModel(
             } catch (e: IllegalArgumentException) {
                 _state.update { it.copy(error = "Ошибка валидации при очистке: ${e.message}") }
             }
-        }
-    }
-
-    private fun handleLoadError(e: Throwable) {
-        _state.update {
-            it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
         }
     }
 }

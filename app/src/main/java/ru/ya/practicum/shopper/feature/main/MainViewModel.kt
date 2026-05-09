@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.inject
 import ru.ya.practicum.shopper.core.model.ShoppingList
-import ru.ya.practicum.shopper.core.util.Resource
 import ru.ya.practicum.shopper.domain.usecase.list.CreateListParams
 import ru.ya.practicum.shopper.domain.usecase.list.CreateListUseCase
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsParams
@@ -202,41 +201,17 @@ class MainViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
 
             getListsUseCase(GetListsParams(userId))
-                .catch { e -> handleLoadError(e) }
-                .collect { resource ->
-                    when (resource) {
-                        is Resource.Success -> {
-                            val uiLists = mapListsUseCase(
-                                MapListsParams(resource.data)
-                            )
-                            _state.update {
-                                it.copy(
-                                    isLoading = false,
-                                    lists = uiLists,
-                                    error = null
-                                )
-                            }
-                        }
-
-                        is Resource.Error -> {
-                            _state.update {
-                                it.copy(
-                                    isLoading = false,
-                                    error = "Ошибка загрузки списков"
-                                )
-                            }
-                        }
+                .catch { e ->
+                    _state.update {
+                        it.copy(isLoading = false, error = "Ошибка загрузки списков: ${e.message}")
                     }
                 }
-        }
-    }
-
-    private fun handleLoadError(e: Throwable) {
-        _state.update {
-            it.copy(
-                isLoading = false,
-                error = "Ошибка загрузки списков: ${e.message}"
-            )
+                .collect { shopperLists ->
+                    val uiLists = mapListsUseCase(MapListsParams(shopperLists))
+                    _state.update {
+                        it.copy(isLoading = false, lists = uiLists, error = null)
+                    }
+                }
         }
     }
 
