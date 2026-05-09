@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -32,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.launch
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
@@ -58,6 +61,7 @@ fun SwipeCardRow(
                 DeleteModeButton(onDelete = { actions.onDelete(shoppingList) })
             } else {
                 ActionButtonsRow(
+                    state,
                     onRename = { actions.onRename(shoppingList) },
                     onCopy = { actions.onCopy(shoppingList) },
                     onDelete = { actions.onDelete(shoppingList) }
@@ -133,10 +137,20 @@ private fun DeleteModeButton(
 
 @Composable
 private fun ActionButtonsRow(
+    state: AnchoredDraggableState<SwipeState>,
     onRename: () -> Unit,
     onCopy: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
+    fun resetAndAction(action: () -> Unit) {
+        scope.launch {
+            state.animateTo(SwipeState.CLOSED)
+        }
+        action()
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,12 +159,12 @@ private fun ActionButtonsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         ActionButton(
-            onClick = onRename,
+            onClick = { resetAndAction(onRename) },
             iconRes = R.drawable.ic_swiped_rename
         )
         Spacer(modifier = Modifier.width(Dimens.dp4))
         ActionButton(
-            onClick = onCopy,
+            onClick = { resetAndAction(onCopy) },
             iconRes = R.drawable.ic_swiped_copy
         )
         Spacer(modifier = Modifier.width(Dimens.dp4))
@@ -211,7 +225,8 @@ data class SwipeCardActions(
     val onIconClick: ((ShoppingList) -> Unit)? = null,
     val onDelete: (ShoppingList) -> Unit,
     val onCopy: (ShoppingList) -> Unit,
-    val onRename: (ShoppingList) -> Unit
+    val onRename: (ShoppingList) -> Unit,
+    val onSwipeStateProvided: (resetSwipe: () -> Unit) -> Unit = {}
 )
 
 enum class SwipeState { CLOSED, BUTTONS, DELETED }

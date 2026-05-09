@@ -37,9 +37,10 @@ import ru.ya.practicum.shopper.core.ui.theme.Theme
 @Composable
 fun RenameListDialog(
     onDismiss: () -> Unit,
-    onCreate: (listName: String) -> Unit
+    onCreate: (String) -> Unit,
+    listName: String?
 ) {
-    var listName by remember { mutableStateOf("") }
+    var listName by remember { mutableStateOf(if (listName.isNullOrEmpty()) "" else listName) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -147,7 +148,7 @@ private fun DialogButtons(
         )
         Spacer(modifier = Modifier.width(8.dp))
         PlainButton(
-            buttonTitle = R.string.create_button_text,
+            buttonTitle = R.string.rename_button_text,
             onClick = onCreate
         )
     }
@@ -159,7 +160,8 @@ private fun AddListDialogLightPreview() {
     Theme(darkTheme = false) {
         RenameListDialog(
             onDismiss = {},
-            onCreate = {}
+            onCreate = {},
+            "rtrt"
         )
     }
 }
@@ -170,7 +172,8 @@ private fun AddListDialogDarkPreview() {
     Theme(darkTheme = true) {
         RenameListDialog(
             onDismiss = {},
-            onCreate = {}
+            onCreate = {},
+            "rtrt"
         )
     }
 }

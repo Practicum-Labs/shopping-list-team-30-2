@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.util.Resource
+import ru.ya.practicum.shopper.domain.api.ShoppingListItemInteractor
 import ru.ya.practicum.shopper.domain.model.ShopperList
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
@@ -31,6 +32,12 @@ data class MainState(
     val isSearchActive: Boolean = false,
     val searchQuery: String = "",
     val searchInput: String = ""
+)
+
+data class ListState(
+    val showEditShoppingListDialog: Boolean = false,
+    val list: ShoppingList? = null,
+    val showDeleteListDialog: Boolean = false
 )
 
 sealed class MainEvent {
@@ -53,17 +60,32 @@ sealed class MainEvent {
     data class UpdateSearchQuery(val query: String) : MainEvent()
     object CloseSearch : MainEvent()
     object PerformSearch : MainEvent()
+
+}
+
+sealed class ListEvents {
+    object HideEditShoppingListDialog : ListEvents()
+    data class ShowEditShoppingListDialog(val list: ShoppingList) : ListEvents()
+    data class SaveNewListName(val newName: String) : ListEvents()
+    data class ShowDeleteListDialog(val list: ShoppingList) : ListEvents()
+    object HideDeleteListDialog : ListEvents()
+    object DeleteList : ListEvents()
+    data class CopyList(val list: ShoppingList, val newName: String) : ListEvents()
 }
 
 @Suppress("TooManyFunctions", "UnusedPrivateProperty") // Подавлено
 class MainViewModel(
     private val listRepository: ShopperListRepository,
     private val itemRepository: ShopperItemRepository,
-    private val userId: String
+    private val userId: String,
+    private val shoppingListItemInteractor: ShoppingListItemInteractor
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
+
+    private val _stateList = MutableStateFlow(ListState())
+    val stateList: StateFlow<ListState> = _stateList.asStateFlow()
     private val _searchQueryInput = MutableStateFlow("")
 
     init {
@@ -79,6 +101,18 @@ class MainViewModel(
                 .collect { query ->
                     _state.update { it.copy(searchQuery = query) }
                 }
+        }
+    }
+
+    fun onListEvent(event: ListEvents) {
+        when (event) {
+            is ListEvents.HideEditShoppingListDialog -> hideEditShoppingListDialog()
+            is ListEvents.ShowEditShoppingListDialog -> showEditShoppingListDialog(event.list)
+            is ListEvents.SaveNewListName -> saveNewListName(event.newName)
+            is ListEvents.ShowDeleteListDialog -> showDeleteListDialog(event.list)
+            is ListEvents.HideDeleteListDialog -> hideDeleteListDialog()
+            is ListEvents.DeleteList -> deleteList()
+            is ListEvents.CopyList -> copyList(event.list, event.newName)
         }
     }
 
@@ -110,6 +144,74 @@ class MainViewModel(
             MainEvent.CloseSearch -> closeSearch()
             MainEvent.PerformSearch -> performSearch()
             else -> Unit
+        }
+    }
+
+    private fun copyList(list: ShoppingList, newName: String) {
+        viewModelScope.launch {
+            val modifiedList = list.copy(
+                userId = userId
+            )
+            shoppingListItemInteractor.copyShoppingList(modifiedList, newName)
+        }
+    }
+
+    private fun showEditShoppingListDialog(list: ShoppingList) {
+        _stateList.update {
+            it.copy(
+                showEditShoppingListDialog = true,
+                list = list
+            )
+        }
+    }
+
+    private fun hideEditShoppingListDialog() {
+        _stateList.update {
+            it.copy(
+                showEditShoppingListDialog = false
+            )
+        }
+    }
+
+    private fun showDeleteListDialog(list: ShoppingList) {
+        _stateList.update {
+            it.copy(
+                showDeleteListDialog = true,
+                list = list
+            )
+        }
+    }
+
+    private fun hideDeleteListDialog() {
+        _stateList.update {
+            it.copy(
+                showDeleteListDialog = false
+            )
+        }
+    }
+
+    private fun deleteList() {
+        viewModelScope.launch {
+            val id = _stateList.value.list?.id
+            if (id != null) {
+                shoppingListItemInteractor.deleteShoppingList(id)
+            }
+        }
+
+        _stateList.update { it.copy(showDeleteListDialog = false) }
+    }
+
+    private fun saveNewListName(newName: String) {
+        viewModelScope.launch {
+            val id = _stateList.value.list?.id
+            if (id != null) {
+                shoppingListItemInteractor.renameShoppingListItem(id, newName)
+            }
+        }
+        _stateList.update {
+            it.copy(
+                showEditShoppingListDialog = false
+            )
         }
     }
 

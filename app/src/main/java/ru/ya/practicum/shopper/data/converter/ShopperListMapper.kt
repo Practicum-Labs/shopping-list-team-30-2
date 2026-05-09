@@ -19,7 +19,7 @@ class ShopperListMapper {
             id = domain.id.toInt(),
             name = domain.name,
             iconId = domain.iconId,
-            insertTime = domain.createdAt,
+            insertTime = System.currentTimeMillis(),
             userId = domain.userId
         )
     }
