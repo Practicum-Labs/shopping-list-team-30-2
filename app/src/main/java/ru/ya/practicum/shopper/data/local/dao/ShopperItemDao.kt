@@ -13,6 +13,9 @@ interface ShopperItemDao {
     @Query("SELECT * FROM ${ShopperItemEntity.TABLE_NAME} WHERE listId = :listId ORDER BY position ASC")
     fun getItems(listId: Int): Flow<List<ShopperItemEntity>>
 
+    @Query("SELECT * FROM ${ShopperItemEntity.TABLE_NAME} WHERE listId = :listId ORDER BY name ASC")
+    fun getItemsOrderedByName(listId: Int): Flow<List<ShopperItemEntity>>
+
     @Insert
     suspend fun insert(item: ShopperItemEntity)
     @Update

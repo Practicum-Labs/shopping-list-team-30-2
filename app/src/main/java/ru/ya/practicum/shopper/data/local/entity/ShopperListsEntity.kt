@@ -10,6 +10,7 @@ data class ShopperListsEntity(
     val name: String,
     val iconId: Int,
     val insertTime: Long = System.currentTimeMillis(),
+    val userId: String = ""
 ) {
     companion object {
         const val TABLE_NAME = "shopper_lists"

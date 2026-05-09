@@ -22,7 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -47,19 +49,33 @@ import ru.ya.practicum.shopper.feature.main.components.MainTopBar
 import ru.ya.practicum.shopper.feature.main.components.SearchResultsContent
 import ru.ya.practicum.shopper.feature.main.components.SearchScreen
 import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
+import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 import ru.ya.practicum.shopper.feature.main.components.SwipeCardActions
 
+data class MainScreenDependencies(
+    val listRepository: ShopperListRepository,
+    val itemRepository: ShopperItemRepository,
+    val dataStore: OnboardDataStore
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     onThemeToggle: () -> Unit,
     modifier: Modifier = Modifier,
-    listRepository: ShopperListRepository = koinInject(),
-    itemRepository: ShopperItemRepository = koinInject()
+    dependencies: MainScreenDependencies = MainScreenDependencies(
+        listRepository = koinInject(),
+        itemRepository = koinInject(),
+        dataStore = koinInject()
+    )
 ) {
+    var userId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) {
+        userId = dependencies.dataStore.getOrCreateUserId()
+    }
+    val currentUserId = userId ?: return
     val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(listRepository, itemRepository)
+        factory = MainViewModelFactory(dependencies.listRepository, dependencies.itemRepository, currentUserId)
     )
 
     val state by viewModel.state.collectAsState()
@@ -360,12 +376,13 @@ private fun SearchEmptyContent(modifier: Modifier = Modifier) {
 
 class MainViewModelFactory(
     private val listRepository: ShopperListRepository,
-    private val itemRepository: ShopperItemRepository
+    private val itemRepository: ShopperItemRepository,
+    private val userId: String
 ) : androidx.lifecycle.ViewModelProvider.Factory {
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(listRepository, itemRepository) as T
+            return MainViewModel(listRepository, itemRepository, userId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

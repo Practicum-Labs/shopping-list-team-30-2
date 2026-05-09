@@ -9,7 +9,8 @@ class ShopperListMapper {
             id = entity.id.toLong(),
             name = entity.name,
             iconId = entity.iconId,
-            createdAt = entity.insertTime
+            createdAt = entity.insertTime,
+            userId = entity.userId
         )
     }
 
@@ -18,7 +19,8 @@ class ShopperListMapper {
             id = domain.id.toInt(),
             name = domain.name,
             iconId = domain.iconId,
-            insertTime = domain.createdAt
+            insertTime = domain.createdAt,
+            userId = domain.userId
         )
     }
 }

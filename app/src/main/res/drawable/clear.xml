@@ -1,0 +1,28 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <group>
+    <clip-path
+        android:pathData="M0,0h24v24h-24z"/>
+    <path
+        android:pathData="M22.3679 21.5819L20.9483 13.3962H21.4277C21.8134 13.3962 22.1242 13.0855 22.1242 12.6998V7.55692C22.1242 7.17121 21.8134 6.86049 21.4277 6.86049H14.8385V1.98549C14.8385 1.59978 14.5277 1.28906 14.142 1.28906H9.85631C9.47059 1.28906 9.15988 1.59978 9.15988 1.98549V6.86049H2.57059C2.18488 6.86049 1.87416 7.17121 1.87416 7.55692V12.6998C1.87416 13.0855 2.18488 13.3962 2.57059 13.3962H3.05006L1.63041 21.5819C1.61302 21.6819 1.61771 21.7844 1.64416 21.8823C1.67061 21.9803 1.71818 22.0712 1.78352 22.1488C1.84887 22.2264 1.93041 22.2888 2.02242 22.3315C2.11443 22.3743 2.21468 22.3963 2.31613 22.3962H21.6822C21.7224 22.3962 21.7626 22.3935 21.8001 22.3855C21.8903 22.3703 21.9766 22.3375 22.054 22.2888C22.1315 22.2401 22.1985 22.1766 22.2513 22.1019C22.3041 22.0272 22.3415 21.9428 22.3616 21.8536C22.3816 21.7643 22.3837 21.672 22.3679 21.5819ZM3.74916 8.73549H11.0349V3.16406H12.9635V8.73549H20.2492V11.5212H3.74916V8.73549ZM16.2849 20.5212V16.3426C16.2849 16.2248 16.1884 16.1283 16.0706 16.1283H14.7849C14.667 16.1283 14.5706 16.2248 14.5706 16.3426V20.5212H9.42774V16.3426C9.42774 16.2248 9.33131 16.1283 9.21345 16.1283H7.92774C7.80988 16.1283 7.71345 16.2248 7.71345 16.3426V20.5212H3.71702L4.92506 13.5569H19.0706L20.2786 20.5212H16.2849Z"
+        android:fillColor="#281805"/>
+  </group>
+</vector>

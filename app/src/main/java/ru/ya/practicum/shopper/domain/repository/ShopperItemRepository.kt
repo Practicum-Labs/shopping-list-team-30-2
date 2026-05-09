@@ -10,5 +10,5 @@ interface ShopperItemRepository {
     suspend fun deleteItemById(id: Int)
     suspend fun updateItem(item: ShopperItem, listId: Int)
     suspend fun insertItems(items: List<ShopperItem>, listId: Int)
-    fun getAllItems(listId: Int): Flow<Resource<List<ShopperItem>>>
+    fun getAllItems(listId: Int, orderByName: Boolean = false): Flow<Resource<List<ShopperItem>>>
 }

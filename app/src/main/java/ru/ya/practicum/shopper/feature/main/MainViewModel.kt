@@ -58,7 +58,8 @@ sealed class MainEvent {
 @Suppress("TooManyFunctions", "UnusedPrivateProperty") // Подавлено
 class MainViewModel(
     private val listRepository: ShopperListRepository,
-    private val itemRepository: ShopperItemRepository
+    private val itemRepository: ShopperItemRepository,
+    private val userId: String
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
@@ -94,6 +95,7 @@ class MainViewModel(
             else -> onSimpleEvent(event)
         }
     }
+
     private fun onSimpleEvent(event: MainEvent) {
         when (event) {
             MainEvent.ShowAddDialog -> showAddDialog()
@@ -185,7 +187,7 @@ class MainViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            listRepository.getAllShopperLists()
+            listRepository.getAllShopperLists(userId)
                 .catch { e ->
                     _state.update {
                         it.copy(
@@ -232,7 +234,8 @@ class MainViewModel(
                     id = 0,
                     name = name,
                     iconId = iconId,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = System.currentTimeMillis(),
+                    userId = userId
                 )
 
                 listRepository.addShopperList(newList)
@@ -317,6 +320,7 @@ class MainViewModel(
             iconResId = this.iconId
         )
     }
+
     private companion object {
         const val SEARCH_DEBOUNCE_MS = 2000L
     }
