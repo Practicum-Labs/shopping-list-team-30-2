@@ -47,6 +47,7 @@ import ru.ya.practicum.shopper.feature.main.components.MainTopBar
 import ru.ya.practicum.shopper.feature.main.components.SearchResultsContent
 import ru.ya.practicum.shopper.feature.main.components.SearchScreen
 import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
+import ru.ya.practicum.shopper.feature.main.components.SwipeCardActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -221,10 +222,15 @@ private fun SearchScreenBody(
         else -> {
             ShoppingListsContent(
                 lists = filteredLists,
-                onListClick = { shoppingList ->
-                    onNavigateToProduct(shoppingList.id, shoppingList.name)
-                },
-                onListIconClick = onListIconClick
+                listActions = SwipeCardActions(
+                    onClick = { shoppingList ->
+                        onNavigateToProduct(shoppingList.id, shoppingList.name)
+                    },
+                    onIconClick = onListIconClick,
+                    onDelete = {},
+                    onCopy = {},
+                    onRename = {}
+                )
             )
         }
     }
@@ -304,10 +310,15 @@ private fun MainScreenBody(
         else -> {
             ShoppingListsContent(
                 lists = filteredLists,
-                onListClick = { shoppingList ->
-                    onNavigateToProduct(shoppingList.id, shoppingList.name)
-                },
-                onListIconClick = onListIconClick,
+                listActions = SwipeCardActions(
+                    onClick = { shoppingList ->
+                        onNavigateToProduct(shoppingList.id, shoppingList.name)
+                    },
+                    onIconClick = onListIconClick,
+                    onDelete = {},
+                    onCopy = {},
+                    onRename = {}
+                )
             )
         }
     }

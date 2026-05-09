@@ -27,4 +27,7 @@ interface ShopperListsDao {
 
     @Query("DELETE FROM ${ShopperListsEntity.TABLE_NAME} WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("UPDATE ${ShopperListsEntity.TABLE_NAME} SET name = :newName WHERE id = :id")
+    suspend fun rename(id: Int, newName: String)
 }
