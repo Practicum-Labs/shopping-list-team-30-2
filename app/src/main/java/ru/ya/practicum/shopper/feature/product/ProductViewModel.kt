@@ -12,8 +12,6 @@ import kotlinx.coroutines.launch
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.util.Resource
-import ru.ya.practicum.shopper.domain.model.ShopperItem
-import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
@@ -22,6 +20,13 @@ import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.GetProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetSortingSettingUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.MapProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.MapProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingParams
+import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import java.io.IOException
@@ -50,42 +55,34 @@ sealed class ProductEvent {
 
 data class ProductDependencies(
     val application: Application,
-    val itemRepository: ShopperItemRepository,
-    val dataStore: ProductDataStore,
     val addProductUseCase: AddProductUseCase,
     val toggleProductBoughtUseCase: ToggleProductBoughtUseCase,
     val deleteProductUseCase: DeleteProductUseCase,
     val deleteAllProductsUseCase: DeleteAllProductsUseCase,
-    val clearBoughtProductsUseCase: ClearBoughtProductsUseCase
+    val clearBoughtProductsUseCase: ClearBoughtProductsUseCase,
+    val getProductsUseCase: GetProductsUseCase,
+    val getSortingSettingUseCase: GetSortingSettingUseCase,
+    val saveSortingSettingUseCase: SaveSortingSettingUseCase,
+    val mapProductsUseCase: MapProductsUseCase
 )
 
 @Suppress("TooManyFunctions")
 class ProductViewModel(
     private val deps: ProductDependencies
 ) : ViewModel() {
-    private val application = deps.application
-    private val itemRepository = deps.itemRepository
-    private val dataStore = deps.dataStore
-    private val addProductUseCase = deps.addProductUseCase
-    private val toggleProductBoughtUseCase = deps.toggleProductBoughtUseCase
-    private val deleteProductUseCase = deps.deleteProductUseCase
-    private val deleteAllProductsUseCase = deps.deleteAllProductsUseCase
-    private val clearBoughtProductsUseCase = deps.clearBoughtProductsUseCase
 
     private val _state = MutableStateFlow(ProductState())
     val state: StateFlow<ProductState> = _state.asStateFlow()
 
     private val defaultUnit: String
-        get() = application.getString(R.string.unit_pcs)
+        get() = deps.application.getString(R.string.unit_pcs)
 
     private val defaultQuantity: String
-        get() = application.getString(R.string.default_quantity)
-
-    private val mapper = ProductMapper(defaultUnit, defaultQuantity)
+        get() = deps.application.getString(R.string.default_quantity)
 
     init {
         viewModelScope.launch {
-            dataStore.isProductsSortByName.collect { res ->
+            deps.getSortingSettingUseCase(Unit).collect { res ->
                 _state.update { it.copy(sortingByName = res) }
             }
         }
@@ -93,18 +90,8 @@ class ProductViewModel(
 
     fun onEvent(event: ProductEvent) {
         when (event) {
-            is ProductEvent.AddProduct -> handleAddProductWithUseCase(
-                event.name,
-                event.quantity,
-                event.unit,
-                event.listId
-            )
-
-            is ProductEvent.ToggleBought -> handleToggleBoughtWithUseCase(
-                event.product,
-                event.listId
-            )
-
+            is ProductEvent.AddProduct -> handleAddProduct(event)
+            is ProductEvent.ToggleBought -> handleToggleBought(event)
             is ProductEvent.LoadProducts -> loadProducts(event.listId)
             is ProductEvent.SwitchSorting -> switchSorting(event.byName)
         }
@@ -117,29 +104,26 @@ class ProductViewModel(
     fun clearBoughtProducts() = performClearBought()
 
     private fun switchSorting(byName: Boolean) {
-        viewModelScope.launch { dataStore.setProductsSortByName(byName) }
-        _state.update { it.copy(sortingByName = byName) }
-        loadProducts(_state.value.currentListId)
+        viewModelScope.launch {
+            deps.saveSortingSettingUseCase(SaveSortingSettingParams(byName))
+            _state.update { it.copy(sortingByName = byName) }
+            loadProducts(_state.value.currentListId)
+        }
     }
 
-    private fun handleAddProductWithUseCase(
-        name: String,
-        quantity: String,
-        unit: String,
-        listId: Int
-    ) {
+    private fun handleAddProduct(event: ProductEvent.AddProduct) {
         viewModelScope.launch {
             try {
-                addProductUseCase(
+                deps.addProductUseCase(
                     AddProductParams(
-                        name = name,
-                        unit = unit.takeIf { it.isNotBlank() },
-                        value = quantity.toFloatOrNull(),
-                        listId = listId,
+                        name = event.name,
+                        unit = event.unit.takeIf { it.isNotBlank() },
+                        value = event.quantity.toFloatOrNull(),
+                        listId = event.listId,
                         position = _state.value.products.size
                     )
                 )
-                loadProducts(listId)
+                loadProducts(event.listId)
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
             } catch (e: IOException) {
@@ -152,20 +136,20 @@ class ProductViewModel(
         }
     }
 
-    private fun handleToggleBoughtWithUseCase(product: Product, listId: Int) {
+    private fun handleToggleBought(event: ProductEvent.ToggleBought) {
         viewModelScope.launch {
             try {
-                toggleProductBoughtUseCase(
+                deps.toggleProductBoughtUseCase(
                     ToggleProductBoughtParams(
-                        productId = product.id.toInt(),
-                        listId = listId,
-                        productName = product.name,
-                        productUnit = product.unit,
-                        productValue = product.amount.toFloatOrNull(),
-                        currentIsBought = product.isBought
+                        productId = event.product.id.toInt(),
+                        listId = event.listId,
+                        productName = event.product.name,
+                        productUnit = event.product.unit,
+                        productValue = event.product.amount.toFloatOrNull(),
+                        currentIsBought = event.product.isBought
                     )
                 )
-                loadProducts(listId)
+                loadProducts(event.listId)
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
             } catch (e: IOException) {
@@ -179,35 +163,37 @@ class ProductViewModel(
     private fun loadProducts(listId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
-            itemRepository.getAllItems(listId, _state.value.sortingByName)
+            deps.getProductsUseCase(GetProductsParams(listId, _state.value.sortingByName))
                 .catch { e -> handleLoadError(e) }
-                .collect { resource -> handleLoadResult(resource) }
-        }
-    }
+                .collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            val products = deps.mapProductsUseCase(
+                                MapProductsParams(
+                                    items = resource.data,
+                                    defaultUnit = defaultUnit,
+                                    defaultQuantity = defaultQuantity
+                                )
+                            )
+                            _state.update {
+                                it.copy(isLoading = false, products = products, error = null)
+                            }
+                        }
 
-    private fun handleLoadError(e: Throwable) {
-        _state.update {
-            it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
-        }
-    }
-
-    private fun handleLoadResult(resource: Resource<List<ShopperItem>>) {
-        when (resource) {
-            is Resource.Success -> {
-                val products = mapper.mapItemsToProducts(resource.data)
-                _state.update { it.copy(isLoading = false, products = products, error = null) }
-            }
-
-            is Resource.Error -> {
-                _state.update { it.copy(isLoading = false, error = "Ошибка загрузки товаров") }
-            }
+                        is Resource.Error -> {
+                            _state.update {
+                                it.copy(isLoading = false, error = "Ошибка загрузки товаров")
+                            }
+                        }
+                    }
+                }
         }
     }
 
     fun deleteProduct(productId: Int) {
         viewModelScope.launch {
             try {
-                deleteProductUseCase(DeleteProductParams(productId))
+                deps.deleteProductUseCase(DeleteProductParams(productId))
                 loadProducts(_state.value.currentListId)
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных при удалении: ${e.message}") }
@@ -224,7 +210,7 @@ class ProductViewModel(
     private fun performDeleteAll() {
         viewModelScope.launch {
             try {
-                deleteAllProductsUseCase(
+                deps.deleteAllProductsUseCase(
                     DeleteAllProductsParams(listId = _state.value.currentListId)
                 )
                 loadProducts(_state.value.currentListId)
@@ -243,7 +229,7 @@ class ProductViewModel(
     private fun performClearBought() {
         viewModelScope.launch {
             try {
-                clearBoughtProductsUseCase(
+                deps.clearBoughtProductsUseCase(
                     ClearBoughtProductsParams(listId = _state.value.currentListId)
                 )
                 loadProducts(_state.value.currentListId)
@@ -258,33 +244,10 @@ class ProductViewModel(
             }
         }
     }
-}
 
-private class ProductMapper(
-    private val defaultUnit: String,
-    private val defaultQuantity: String
-) {
-    fun mapItemsToProducts(items: List<ShopperItem>?): List<Product> {
-        return items?.map { mapItemToProduct(it) } ?: emptyList()
-    }
-
-    fun mapItemToProduct(item: ShopperItem): Product {
-        return Product(
-            id = item.id.toLong(),
-            name = item.name,
-            amount = formatValue(item.value),
-            unit = item.unit ?: defaultUnit,
-            isBought = item.isBought
-        )
-    }
-
-    private fun formatValue(value: Float?): String {
-        return value?.let {
-            if (it == it.toLong().toFloat()) {
-                it.toLong().toString()
-            } else {
-                it.toString()
-            }
-        } ?: defaultQuantity
+    private fun handleLoadError(e: Throwable) {
+        _state.update {
+            it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
+        }
     }
 }

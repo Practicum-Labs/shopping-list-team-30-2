@@ -9,6 +9,10 @@ import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetSortingSettingUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.MapProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import ru.ya.practicum.shopper.feature.product.ProductDependencies
 import ru.ya.practicum.shopper.feature.product.ProductViewModel
@@ -27,17 +31,23 @@ val domainModule = module {
     factory { DeleteProductUseCase(get()) }
     factory { DeleteAllProductsUseCase(get()) }
     factory { ClearBoughtProductsUseCase(get()) }
+    factory { GetProductsUseCase(get()) }
+    factory { GetSortingSettingUseCase(get()) }
+    factory { SaveSortingSettingUseCase(get()) }
+    factory { MapProductsUseCase() }
 
     factory {
         ProductDependencies(
-            application = get(),
-            itemRepository = get(),
-            dataStore = get(),
-            addProductUseCase = get(),
-            toggleProductBoughtUseCase = get(),
-            deleteProductUseCase = get(),
-            deleteAllProductsUseCase = get(),
-            clearBoughtProductsUseCase = get()
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
         )
     }
 
