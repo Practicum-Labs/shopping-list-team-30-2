@@ -1,6 +1,8 @@
 package ru.ya.practicum.shopper.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.data.impl.ShopperItemRepositoryImpl
 import ru.ya.practicum.shopper.data.impl.ShopperListRepositoryImpl
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
@@ -53,8 +55,10 @@ val domainModule = module {
     factory { MapListsUseCase() }
 
     factory {
+        val context = androidContext()
         ProductDependencies(
-            application = get(),
+            defaultUnit = context.getString(R.string.unit_pcs),
+            defaultQuantity = context.getString(R.string.default_quantity),
             addProductUseCase = get(),
             toggleProductBoughtUseCase = get(),
             deleteProductUseCase = get(),
@@ -66,6 +70,7 @@ val domainModule = module {
             mapProductsUseCase = get()
         )
     }
+
     factory { ProductViewModel(get()) }
 
     factory { (userId: String) -> MainViewModel(userId) }

@@ -1,6 +1,5 @@
 package ru.ya.practicum.shopper.feature.product
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
@@ -36,7 +34,8 @@ import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 
 data class ProductDependencies(
-    val application: Application,
+    val defaultUnit: String,
+    val defaultQuantity: String,
     val addProductUseCase: AddProductUseCase,
     val toggleProductBoughtUseCase: ToggleProductBoughtUseCase,
     val deleteProductUseCase: DeleteProductUseCase,
@@ -123,8 +122,8 @@ class ProductViewModel(
             val products = deps.mapProductsUseCase(
                 MapProductsParams(
                     items = shopperItems,
-                    defaultUnit = deps.application.getString(R.string.unit_pcs),
-                    defaultQuantity = deps.application.getString(R.string.default_quantity)
+                    defaultUnit = deps.defaultUnit,
+                    defaultQuantity = deps.defaultQuantity
                 )
             )
             ProductResult.ProductsLoaded(products)
