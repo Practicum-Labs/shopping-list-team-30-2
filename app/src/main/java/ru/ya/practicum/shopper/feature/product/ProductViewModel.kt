@@ -16,6 +16,12 @@ import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductParams
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import java.io.IOException
@@ -42,14 +48,29 @@ sealed class ProductEvent {
     data class SwitchSorting(val byName: Boolean) : ProductEvent()
 }
 
+data class ProductDependencies(
+    val application: Application,
+    val itemRepository: ShopperItemRepository,
+    val dataStore: ProductDataStore,
+    val addProductUseCase: AddProductUseCase,
+    val toggleProductBoughtUseCase: ToggleProductBoughtUseCase,
+    val deleteProductUseCase: DeleteProductUseCase,
+    val deleteAllProductsUseCase: DeleteAllProductsUseCase,
+    val clearBoughtProductsUseCase: ClearBoughtProductsUseCase
+)
+
 @Suppress("TooManyFunctions")
 class ProductViewModel(
-    private val application: Application,
-    private val itemRepository: ShopperItemRepository,
-    private val dataStore: ProductDataStore,
-    private val addProductUseCase: AddProductUseCase,
-    private val toggleProductBoughtUseCase: ToggleProductBoughtUseCase
+    private val deps: ProductDependencies
 ) : ViewModel() {
+    private val application = deps.application
+    private val itemRepository = deps.itemRepository
+    private val dataStore = deps.dataStore
+    private val addProductUseCase = deps.addProductUseCase
+    private val toggleProductBoughtUseCase = deps.toggleProductBoughtUseCase
+    private val deleteProductUseCase = deps.deleteProductUseCase
+    private val deleteAllProductsUseCase = deps.deleteAllProductsUseCase
+    private val clearBoughtProductsUseCase = deps.clearBoughtProductsUseCase
 
     private val _state = MutableStateFlow(ProductState())
     val state: StateFlow<ProductState> = _state.asStateFlow()
@@ -155,24 +176,6 @@ class ProductViewModel(
         }
     }
 
-    private fun performDeleteAll() {
-        viewModelScope.launch {
-            _state.value.products.forEach {
-                itemRepository.deleteItemById(it.id.toInt())
-            }
-            loadProducts(_state.value.currentListId)
-        }
-    }
-
-    private fun performClearBought() {
-        viewModelScope.launch {
-            _state.value.products.filter { it.isBought }.forEach {
-                itemRepository.deleteItemById(it.id.toInt())
-            }
-            loadProducts(_state.value.currentListId)
-        }
-    }
-
     private fun loadProducts(listId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, currentListId = listId) }
@@ -197,6 +200,61 @@ class ProductViewModel(
 
             is Resource.Error -> {
                 _state.update { it.copy(isLoading = false, error = "Ошибка загрузки товаров") }
+            }
+        }
+    }
+
+    fun deleteProduct(productId: Int) {
+        viewModelScope.launch {
+            try {
+                deleteProductUseCase(DeleteProductParams(productId))
+                loadProducts(_state.value.currentListId)
+            } catch (e: SQLException) {
+                _state.update { it.copy(error = "Ошибка базы данных при удалении: ${e.message}") }
+            } catch (e: IOException) {
+                _state.update { it.copy(error = "Ошибка ввода-вывода при удалении: ${e.message}") }
+            } catch (e: IllegalStateException) {
+                _state.update { it.copy(error = "Ошибка состояния при удалении: ${e.message}") }
+            } catch (e: IllegalArgumentException) {
+                _state.update { it.copy(error = "Ошибка валидации при удалении: ${e.message}") }
+            }
+        }
+    }
+
+    private fun performDeleteAll() {
+        viewModelScope.launch {
+            try {
+                deleteAllProductsUseCase(
+                    DeleteAllProductsParams(listId = _state.value.currentListId)
+                )
+                loadProducts(_state.value.currentListId)
+            } catch (e: SQLException) {
+                _state.update { it.copy(error = "Ошибка базы данных при удалении всех: ${e.message}") }
+            } catch (e: IOException) {
+                _state.update { it.copy(error = "Ошибка ввода-вывода при удалении всех: ${e.message}") }
+            } catch (e: IllegalStateException) {
+                _state.update { it.copy(error = "Ошибка состояния при удалении всех: ${e.message}") }
+            } catch (e: IllegalArgumentException) {
+                _state.update { it.copy(error = "Ошибка валидации при удалении всех: ${e.message}") }
+            }
+        }
+    }
+
+    private fun performClearBought() {
+        viewModelScope.launch {
+            try {
+                clearBoughtProductsUseCase(
+                    ClearBoughtProductsParams(listId = _state.value.currentListId)
+                )
+                loadProducts(_state.value.currentListId)
+            } catch (e: SQLException) {
+                _state.update { it.copy(error = "Ошибка базы данных при очистке: ${e.message}") }
+            } catch (e: IOException) {
+                _state.update { it.copy(error = "Ошибка ввода-вывода при очистке: ${e.message}") }
+            } catch (e: IllegalStateException) {
+                _state.update { it.copy(error = "Ошибка состояния при очистке: ${e.message}") }
+            } catch (e: IllegalArgumentException) {
+                _state.update { it.copy(error = "Ошибка валидации при очистке: ${e.message}") }
             }
         }
     }

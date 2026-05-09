@@ -31,4 +31,7 @@ interface ShopperItemDao {
 
     @Query("DELETE FROM ${ShopperItemEntity.TABLE_NAME} WHERE listId = :listId AND isBought = 1")
     suspend fun clearBought(listId: Int)
+
+    @Query("DELETE FROM ${ShopperItemEntity.TABLE_NAME} WHERE listId = :listId")
+    suspend fun deleteAllByListId(listId: Int)
 }

@@ -41,4 +41,11 @@ class ShopperItemRepositoryImpl(
 
     }
 
+    override suspend fun deleteAllItemsByListId(listId: Int) {
+        dao.deleteAllByListId(listId)
+    }
+
+    override suspend fun clearBoughtItems(listId: Int) {
+        dao.clearBought(listId)
+    }
 }
