@@ -10,11 +10,23 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent.inject
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.util.Resource
-import ru.ya.practicum.shopper.domain.model.ShopperList
-import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
-import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
+import ru.ya.practicum.shopper.domain.usecase.list.CreateListParams
+import ru.ya.practicum.shopper.domain.usecase.list.CreateListUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsParams
+import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.DeleteListParams
+import ru.ya.practicum.shopper.domain.usecase.list.DeleteListUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.GetListsParams
+import ru.ya.practicum.shopper.domain.usecase.list.GetListsUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.MapListsParams
+import ru.ya.practicum.shopper.domain.usecase.list.MapListsUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.UpdateListIconParams
+import ru.ya.practicum.shopper.domain.usecase.list.UpdateListIconUseCase
+import ru.ya.practicum.shopper.domain.usecase.list.UpdateListNameParams
+import ru.ya.practicum.shopper.domain.usecase.list.UpdateListNameUseCase
 import java.io.IOException
 import java.sql.SQLException
 
@@ -55,12 +67,18 @@ sealed class MainEvent {
     object PerformSearch : MainEvent()
 }
 
-@Suppress("TooManyFunctions", "UnusedPrivateProperty") // Подавлено
+@Suppress("TooManyFunctions")
 class MainViewModel(
-    private val listRepository: ShopperListRepository,
-    private val itemRepository: ShopperItemRepository,
     private val userId: String
 ) : ViewModel() {
+
+    private val getListsUseCase: GetListsUseCase by inject(GetListsUseCase::class.java)
+    private val createListUseCase: CreateListUseCase by inject(CreateListUseCase::class.java)
+    private val deleteListUseCase: DeleteListUseCase by inject(DeleteListUseCase::class.java)
+    private val updateListNameUseCase: UpdateListNameUseCase by inject(UpdateListNameUseCase::class.java)
+    private val updateListIconUseCase: UpdateListIconUseCase by inject(UpdateListIconUseCase::class.java)
+    private val deleteAllListsUseCase: DeleteAllListsUseCase by inject(DeleteAllListsUseCase::class.java)
+    private val mapListsUseCase: MapListsUseCase by inject(MapListsUseCase::class.java)
 
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
@@ -128,11 +146,10 @@ class MainViewModel(
     private fun confirmDeleteAll() {
         viewModelScope.launch {
             try {
-                val currentLists = _state.value.lists
-                currentLists.forEach { list ->
-                    listRepository.deleteShopperListById(list.id)
-                }
+                val listIds = _state.value.lists.map { it.id }
+                deleteAllListsUseCase(DeleteAllListsParams(listIds))
                 _state.update { it.copy(showDeleteAllDialog = false) }
+                loadLists()
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка при удалении: ${e.message}") }
             } catch (e: IOException) {
@@ -167,12 +184,9 @@ class MainViewModel(
     private fun updateListIcon(listId: Int, newIconId: Int) {
         viewModelScope.launch {
             try {
-                val existingList = listRepository.getShopperListById(listId)
-                if (existingList != null) {
-                    val updatedList = existingList.copy(iconId = newIconId)
-                    listRepository.updateShopperList(updatedList)
-                }
+                updateListIconUseCase(UpdateListIconParams(listId, newIconId))
                 _state.update { it.copy(showIconPicker = false, editingListId = null) }
+                loadLists()
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
             } catch (e: IOException) {
@@ -187,19 +201,14 @@ class MainViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            listRepository.getAllShopperLists(userId)
-                .catch { e ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Ошибка загрузки списков: ${e.message}"
-                        )
-                    }
-                }
+            getListsUseCase(GetListsParams(userId))
+                .catch { e -> handleLoadError(e) }
                 .collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            val uiLists = resource.data?.map { it.toUiModel() } ?: emptyList()
+                            val uiLists = mapListsUseCase(
+                                MapListsParams(resource.data)
+                            )
                             _state.update {
                                 it.copy(
                                     isLoading = false,
@@ -222,6 +231,15 @@ class MainViewModel(
         }
     }
 
+    private fun handleLoadError(e: Throwable) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                error = "Ошибка загрузки списков: ${e.message}"
+            )
+        }
+    }
+
     private fun createList(name: String, iconId: Int) {
         viewModelScope.launch {
             try {
@@ -229,16 +247,8 @@ class MainViewModel(
                     _state.update { it.copy(error = "Название не может быть пустым") }
                     return@launch
                 }
-
-                val newList = ShopperList(
-                    id = 0,
-                    name = name,
-                    iconId = iconId,
-                    createdAt = System.currentTimeMillis(),
-                    userId = userId
-                )
-
-                listRepository.addShopperList(newList)
+                createListUseCase(CreateListParams(name, iconId, userId))
+                loadLists()
                 hideAddDialog()
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
@@ -253,7 +263,8 @@ class MainViewModel(
     private fun deleteList(listId: Int) {
         viewModelScope.launch {
             try {
-                listRepository.deleteShopperListById(listId)
+                deleteListUseCase(DeleteListParams(listId))
+                loadLists()
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных при удалении: ${e.message}") }
             } catch (e: IOException) {
@@ -267,11 +278,8 @@ class MainViewModel(
     private fun updateListName(listId: Int, newName: String) {
         viewModelScope.launch {
             try {
-                val existingList = listRepository.getShopperListById(listId)
-                if (existingList != null) {
-                    val updatedList = existingList.copy(name = newName)
-                    listRepository.updateShopperList(updatedList)
-                }
+                updateListNameUseCase(UpdateListNameParams(listId, newName))
+                loadLists()
             } catch (e: SQLException) {
                 _state.update { it.copy(error = "Ошибка базы данных при обновлении: ${e.message}") }
             } catch (e: IOException) {
@@ -313,15 +321,7 @@ class MainViewModel(
         _state.update { it.copy(newListName = name) }
     }
 
-    private fun ShopperList.toUiModel(): ShoppingList {
-        return ShoppingList(
-            id = this.id.toInt(),
-            name = this.name,
-            iconResId = this.iconId
-        )
-    }
-
     private companion object {
-        const val SEARCH_DEBOUNCE_MS = 2000L
+        const val SEARCH_DEBOUNCE_MS = 500L
     }
 }

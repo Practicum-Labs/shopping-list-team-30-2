@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -33,15 +34,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.AddListDialog
 import ru.ya.practicum.shopper.core.ui.DeleteAllListsDialog
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
-import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
-import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
 import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 import ru.ya.practicum.shopper.feature.main.components.MainCreateList
 import ru.ya.practicum.shopper.feature.main.components.MainEmptyContent
@@ -51,35 +51,36 @@ import ru.ya.practicum.shopper.feature.main.components.SearchScreen
 import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 
-data class MainScreenDependencies(
-    val listRepository: ShopperListRepository,
-    val itemRepository: ShopperItemRepository,
-    val dataStore: OnboardDataStore
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     onThemeToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-    dependencies: MainScreenDependencies = MainScreenDependencies(
-        listRepository = koinInject(),
-        itemRepository = koinInject(),
-        dataStore = koinInject()
-    )
+    modifier: Modifier = Modifier
 ) {
+    val dataStore: OnboardDataStore = koinInject()
     var userId by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
     LaunchedEffect(Unit) {
-        userId = dependencies.dataStore.getOrCreateUserId()
+        userId = dataStore.getOrCreateUserId()
+        isLoading = false
     }
-    val currentUserId = userId ?: return
-    val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(
-            dependencies.listRepository,
-            dependencies.itemRepository,
-            currentUserId
-        )
+
+    if (isLoading || userId == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val currentUserId = userId!!
+
+    val viewModel: MainViewModel = koinViewModel(
+        parameters = { parametersOf(currentUserId) }
     )
 
     val state by viewModel.state.collectAsState()
@@ -363,19 +364,5 @@ private fun SearchEmptyContent(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-class MainViewModelFactory(
-    private val listRepository: ShopperListRepository,
-    private val itemRepository: ShopperItemRepository,
-    private val userId: String
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MainViewModel(listRepository, itemRepository, userId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
