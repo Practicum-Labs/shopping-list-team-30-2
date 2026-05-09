@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 
@@ -21,7 +23,11 @@ fun MainCreateList(
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.size(56.dp)
+        modifier = Modifier
+            .size(56.dp)
+            .semantics {
+                testTag = "fab_add_list"
+            }
     ) {
         Icon(
             painter = painterResource(id = R.drawable.plus),

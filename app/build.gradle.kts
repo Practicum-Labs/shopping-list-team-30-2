@@ -86,6 +86,15 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        val developProperties = Properties()
+        val developPropertiesFile = rootProject.file("develop.properties")
+        if (developPropertiesFile.exists()) {
+            developProperties.load(developPropertiesFile.inputStream())
+        }
+
+        buildConfigField("String", "TEST_USER_EMAIL", "\"${developProperties.getProperty("TEST_USER_EMAIL", "")}\"")
+        buildConfigField("String", "TEST_USER_PASSWORD", "\"${developProperties.getProperty("TEST_USER_PASSWORD", "")}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField(
