@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -33,17 +34,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
 import ru.ya.practicum.shopper.core.ui.AddListDialog
 import ru.ya.practicum.shopper.core.ui.DeleteAllListsDialog
 import ru.ya.practicum.shopper.core.ui.RenameListDialog
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
-import ru.ya.practicum.shopper.domain.api.ShoppingListItemInteractor
-import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
-import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
 import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 import ru.ya.practicum.shopper.feature.main.components.MainCreateList
 import ru.ya.practicum.shopper.feature.main.components.MainEmptyContent
@@ -54,38 +53,36 @@ import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
 import ru.ya.practicum.shopper.feature.main.components.SwipeCardActions
 import ru.ya.practicum.shopper.feature.onboard.OnboardDataStore
 
-data class MainScreenDependencies(
-    val listRepository: ShopperListRepository,
-    val itemRepository: ShopperItemRepository,
-    val dataStore: OnboardDataStore,
-    val shoppingListItemInteractor: ShoppingListItemInteractor
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     onThemeToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-    dependencies: MainScreenDependencies = MainScreenDependencies(
-        listRepository = koinInject(),
-        itemRepository = koinInject(),
-        dataStore = koinInject(),
-        shoppingListItemInteractor = koinInject()
-    )
+    modifier: Modifier = Modifier
 ) {
+    val dataStore: OnboardDataStore = koinInject()
     var userId by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
     LaunchedEffect(Unit) {
-        userId = dependencies.dataStore.getOrCreateUserId()
+        userId = dataStore.getOrCreateUserId()
+        isLoading = false
     }
-    val currentUserId = userId ?: return
-    val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(
-            dependencies.listRepository,
-            dependencies.itemRepository,
-            currentUserId,
-            dependencies.shoppingListItemInteractor
-        )
+
+    if (isLoading || userId == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val currentUserId = userId!!
+
+    val viewModel: MainViewModel = koinViewModel(
+        parameters = { parametersOf(currentUserId) }
     )
 
     val state by viewModel.state.collectAsState()
@@ -93,7 +90,7 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     ErrorHandler(state.error, snackbarHostState) {
-        viewModel.onEvent(MainEvent.LoadLists)
+        viewModel.onIntent(MainIntent.LoadLists)
     }
 
     MainScreenContent(
@@ -103,8 +100,8 @@ fun MainScreen(
         callbacks = MainScreenCallbacks(
             onNavigateToProduct = onNavigateToProduct,
             onThemeToggle = onThemeToggle,
-            onEvent = viewModel::onEvent,
-            onListEvents = viewModel::onListEvent
+            onIntent = viewModel::onIntent,
+            onListEvent = viewModel::onListEvent
         ),
         modifier = modifier
     )
@@ -127,8 +124,8 @@ private fun ErrorHandler(
 data class MainScreenCallbacks(
     val onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     val onThemeToggle: () -> Unit,
-    val onEvent: (MainEvent) -> Unit,
-    val onListEvents: (ListEvents) -> Unit
+    val onIntent: (MainIntent) -> Unit,
+    val onListEvent: (ListEvents) -> Unit
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,15 +142,15 @@ private fun MainScreenContent(
     if (state.isSearchActive) {
         SearchScreen(
             query = state.searchInput,
-            onQueryChange = { callbacks.onEvent(MainEvent.UpdateSearchQuery(it)) },
-            onClose = { callbacks.onEvent(MainEvent.CloseSearch) },
-            onSearch = { callbacks.onEvent(MainEvent.PerformSearch) }
+            onQueryChange = { callbacks.onIntent(MainIntent.UpdateSearchQuery(it)) },
+            onClose = { callbacks.onIntent(MainIntent.CloseSearch) },
+            onSearch = { callbacks.onIntent(MainIntent.PerformSearch) }
         ) {
             SearchScreenBody(
                 state = state,
                 onNavigateToProduct = callbacks.onNavigateToProduct,
                 onListIconClick = { shoppingList ->
-                    callbacks.onEvent(MainEvent.ShowIconPickerForList(shoppingList.id))
+                    callbacks.onIntent(MainIntent.ShowIconPickerForList(shoppingList.id))
                 }
             )
         }
@@ -168,7 +165,7 @@ private fun MainScreenContent(
         MainScreenDialogs(
             state = state,
             sheetState = sheetState,
-            onEvent = callbacks.onEvent
+            onIntent = callbacks.onIntent
         )
     }
 }
@@ -190,13 +187,13 @@ private fun MainScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             MainTopBar(
-                onSearchClick = { callbacks.onEvent(MainEvent.ToggleSearch) },
-                onDeleteClick = { callbacks.onEvent(MainEvent.ShowDeleteAllDialog) },
+                onSearchClick = { callbacks.onIntent(MainIntent.ToggleSearch) },
+                onDeleteClick = { callbacks.onIntent(MainIntent.ShowDeleteAllDialog) },
                 onThemeClick = callbacks.onThemeToggle
             )
         },
         floatingActionButton = {
-            MainCreateList(onClick = { callbacks.onEvent(MainEvent.ShowAddDialog) })
+            MainCreateList(onClick = { callbacks.onIntent(MainIntent.ShowAddDialog) })
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
@@ -209,7 +206,7 @@ private fun MainScaffold(
                 state = state,
                 listState = listState,
                 listActions = listActions,
-                listEvents = callbacks.onListEvents
+                onListEvent = callbacks.onListEvent
             )
         }
     }
@@ -226,18 +223,18 @@ private fun rememberSwipeCardActions(
                 callbacks.onNavigateToProduct(shoppingList.id, shoppingList.name)
             },
             onIconClick = { shoppingList ->
-                callbacks.onEvent(MainEvent.ShowIconPickerForList(shoppingList.id))
+                callbacks.onIntent(MainIntent.ShowIconPickerForList(shoppingList.id))
             },
             onDelete = { shoppingList ->
-                callbacks.onListEvents(ListEvents.ShowDeleteListDialog(shoppingList))
+                callbacks.onListEvent(ListEvents.ShowDeleteListDialog(shoppingList))
             },
             onCopy = { shoppingList ->
-                callbacks.onListEvents(
+                callbacks.onListEvent(
                     ListEvents.CopyList(shoppingList, "${shoppingList.name} $copyText")
                 )
             },
             onRename = { shoppingList ->
-                callbacks.onListEvents(ListEvents.ShowEditShoppingListDialog(shoppingList))
+                callbacks.onListEvent(ListEvents.ShowEditShoppingListDialog(shoppingList))
             }
         )
     }
@@ -303,32 +300,33 @@ private fun SearchScreenBody(
 private fun MainScreenDialogs(
     state: MainState,
     sheetState: androidx.compose.material3.SheetState,
-    onEvent: (MainEvent) -> Unit
+    onIntent: (MainIntent) -> Unit
 ) {
     if (state.showDeleteAllDialog) {
         DeleteAllListsDialog(
-            onDismiss = { onEvent(MainEvent.HideDeleteAllDialog) },
-            onConfirm = { onEvent(MainEvent.ConfirmDeleteAll) }
+            onDismiss = { onIntent(MainIntent.HideDeleteAllDialog) },
+            onConfirm = { onIntent(MainIntent.ConfirmDeleteAll) }
         )
     }
-    if (state.showIconPicker && state.editingListId != null) {
-        IconsModalBottomSheet(
-            bottomSheetState = sheetState,
-            onDismissRequest = { onEvent(MainEvent.HideIconPicker) },
-            onIconClick = { iconResId ->
-                state.editingListId?.let { listId ->
-                    onEvent(MainEvent.UpdateListIcon(listId, iconResId))
+
+    if (state.showIconPicker) {
+        state.editingListId?.let { listId ->
+            IconsModalBottomSheet(
+                bottomSheetState = sheetState,
+                onDismissRequest = { onIntent(MainIntent.HideIconPicker) },
+                onIconClick = { iconResId ->
+                    onIntent(MainIntent.UpdateListIcon(listId, iconResId))
                 }
-            }
-        )
+            )
+        }
     }
 
     if (state.showAddDialog) {
         AddListDialog(
-            onDismiss = { onEvent(MainEvent.HideAddDialog) },
+            onDismiss = { onIntent(MainIntent.HideAddDialog) },
             onCreate = { listName ->
-                onEvent(
-                    MainEvent.CreateList(
+                onIntent(
+                    MainIntent.CreateList(
                         name = listName,
                         iconId = state.selectedIconId
                     )
@@ -343,7 +341,7 @@ private fun MainScreenBody(
     state: MainState,
     listState: ListState,
     listActions: SwipeCardActions,
-    listEvents: (ListEvents) -> Unit
+    onListEvent: (ListEvents) -> Unit
 ) {
     val filteredLists = if (state.searchQuery.isBlank()) {
         state.lists
@@ -352,8 +350,11 @@ private fun MainScreenBody(
             it.name.contains(state.searchQuery, ignoreCase = true)
         }
     }
+
     when {
-        state.isLoading -> {}
+        state.isLoading -> { /* Показываем индикатор загрузки */
+        }
+
         state.lists.isEmpty() -> {
             MainEmptyContent(
                 modifier = Modifier
@@ -377,7 +378,7 @@ private fun MainScreenBody(
             )
             MainScreenDialogs(
                 listState = listState,
-                listEvents = listEvents
+                onListEvent = onListEvent
             )
         }
     }
@@ -386,21 +387,21 @@ private fun MainScreenBody(
 @Composable
 private fun MainScreenDialogs(
     listState: ListState,
-    listEvents: (ListEvents) -> Unit
+    onListEvent: (ListEvents) -> Unit
 ) {
     when {
         listState.showEditShoppingListDialog -> {
             RenameListDialog(
-                onDismiss = { listEvents(ListEvents.HideEditShoppingListDialog) },
-                onCreate = { newName -> listEvents(ListEvents.SaveNewListName(newName)) },
+                onDismiss = { onListEvent(ListEvents.HideEditShoppingListDialog) },
+                onCreate = { newName -> onListEvent(ListEvents.SaveNewListName(newName)) },
                 listName = listState.list?.name
             )
         }
 
         listState.showDeleteListDialog -> {
             DeleteAllListsDialog(
-                onDismiss = { listEvents(ListEvents.HideDeleteListDialog) },
-                onConfirm = { listEvents(ListEvents.DeleteList) },
+                onDismiss = { onListEvent(ListEvents.HideDeleteListDialog) },
+                onConfirm = { onListEvent(ListEvents.DeleteList) },
                 deleteOneList = true,
                 listName = listState.list?.name ?: ""
             )
@@ -439,25 +440,5 @@ private fun SearchEmptyContent(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-class MainViewModelFactory(
-    private val listRepository: ShopperListRepository,
-    private val itemRepository: ShopperItemRepository,
-    private val userId: String,
-    private val shoppingListItemInteractor: ShoppingListItemInteractor
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MainViewModel(
-                listRepository,
-                itemRepository,
-                userId,
-                shoppingListItemInteractor
-            ) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

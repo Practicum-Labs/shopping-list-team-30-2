@@ -34,11 +34,4 @@ class ThemeDataStore(private val context: Context) {
             preferences[USER_THEME_PREFERENCE_KEY] = isUserPreference
         }
     }
-
-//    suspend fun resetToSystemTheme() {
-//        context.dataStore.edit { preferences ->
-//            preferences.remove(DARK_THEME_KEY)
-//            preferences.remove(USER_THEME_PREFERENCE_KEY)
-//        }
-//    }
 }

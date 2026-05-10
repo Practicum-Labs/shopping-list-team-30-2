@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
@@ -38,7 +40,9 @@ fun ShoppingListCard(
     val iconResId = getValidIconResId(shoppingList.iconResId)
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { testTag = "shopping_list_card_${shoppingList.id}" },
         shape = RoundedCornerShape(Dimens.dp12),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -75,7 +79,12 @@ private fun ShoppingListCardContent(
     ) {
         ListIcon(
             iconResId = iconResId,
-            onIconClick = onIconClick?.let { { it(shoppingList) } }
+            onIconClick = onIconClick?.let {
+                {
+                    it(shoppingList)
+                }
+            },
+            listId = shoppingList.id
         )
         Spacer(modifier = Modifier.width(Dimens.dp16))
         ListName(name = shoppingList.name)
@@ -85,7 +94,8 @@ private fun ShoppingListCardContent(
 @Composable
 private fun ListIcon(
     iconResId: Int,
-    onIconClick: (() -> Unit)? = null
+    onIconClick: (() -> Unit)? = null,
+    listId: Int = 0
 ) {
     Box(
         modifier = Modifier
@@ -96,7 +106,9 @@ private fun ListIcon(
             )
             .then(
                 if (onIconClick != null) {
-                    Modifier.clickable { onIconClick() }
+                    Modifier
+                        .clickable { onIconClick() }
+                        .semantics { testTag = "list_icon_$listId" }
                 } else {
                     Modifier
                 }

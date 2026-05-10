@@ -44,7 +44,7 @@ Android-приложение для создания и управления с�
 
 ---
 
-### 🏗️ Полная сборка проекта
+### 🏗️ Полная сборка проекта (debug и release версии)
 
 ```bash
 ./gradlew build
@@ -63,6 +63,19 @@ build/reports/detekt/
 ```
 
 ---
+
+### Запуск UI-тестов (нужен запущенный эмулятор)
+
+```bash
+./gradlew connectedAndroidTest
+```
+
+Предварительно необходимо создать файл develop.properties и внести в него следующее содержание:
+
+```bash
+TEST_USER_EMAIL = login
+TEST_USER_PASSWORD = password
+```
 
 ## 📁 Структура проекта (схематично)
 
@@ -148,7 +161,7 @@ build/reports/detekt/
 
 ## ⚙️ Полезные команды
 
-Очистка проекта:
+### Очистка проекта:
 
 ```bash
 ./gradlew clean

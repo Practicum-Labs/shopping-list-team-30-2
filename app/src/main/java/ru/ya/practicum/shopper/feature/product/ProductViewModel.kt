@@ -1,221 +1,281 @@
 package ru.ya.practicum.shopper.feature.product
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.ya.practicum.shopper.R
-import ru.ya.practicum.shopper.core.model.Product
-import ru.ya.practicum.shopper.core.util.Resource
-import ru.ya.practicum.shopper.domain.model.ShopperItem
-import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
-import java.io.IOException
-import java.sql.SQLException
+import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
+import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductParams
+import ru.ya.practicum.shopper.domain.usecase.product.DeleteProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.GetProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.GetSortingSettingUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.MapProductsParams
+import ru.ya.practicum.shopper.domain.usecase.product.MapProductsUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingParams
+import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
+import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 
-data class ProductState(
-    val products: List<Product> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val currentListId: Int = 0,
-    val sortingByName: Boolean = false,
+data class ProductDependencies(
+    val defaultUnit: String,
+    val defaultQuantity: String,
+    val addProductUseCase: AddProductUseCase,
+    val toggleProductBoughtUseCase: ToggleProductBoughtUseCase,
+    val deleteProductUseCase: DeleteProductUseCase,
+    val deleteAllProductsUseCase: DeleteAllProductsUseCase,
+    val clearBoughtProductsUseCase: ClearBoughtProductsUseCase,
+    val getProductsUseCase: GetProductsUseCase,
+    val getSortingSettingUseCase: GetSortingSettingUseCase,
+    val saveSortingSettingUseCase: SaveSortingSettingUseCase,
+    val mapProductsUseCase: MapProductsUseCase
 )
 
-sealed class ProductEvent {
-    data class AddProduct(
-        val name: String,
-        val quantity: String,
-        val unit: String,
-        val listId: Int
-    ) : ProductEvent()
-
-    data class ToggleBought(val product: Product, val listId: Int) : ProductEvent()
-    data class LoadProducts(val listId: Int) : ProductEvent()
-    data class SwitchSorting(val byName: Boolean) : ProductEvent()
-}
-
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "TooGenericExceptionCaught")
 class ProductViewModel(
-    private val application: Application,
-    private val itemRepository: ShopperItemRepository,
-    private val dataStore: ProductDataStore
+    private val deps: ProductDependencies
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProductState())
-    val state: StateFlow<ProductState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ProductViewState())
+    val state: StateFlow<ProductViewState> = _state.asStateFlow()
 
-    private val defaultUnit: String
-        get() = application.getString(R.string.unit_pcs)
+    private val _effect = Channel<ProductEffect>()
+    val effect: Flow<ProductEffect> = _effect.receiveAsFlow()
 
-    private val defaultQuantity: String
-        get() = application.getString(R.string.default_quantity)
-
-    private val mapper = ProductMapper(defaultUnit, defaultQuantity)
+    private val actions = MutableSharedFlow<ProductIntent>()
 
     init {
+        setupSortingListener()
+        processActions()
+    }
+
+    fun onIntent(intent: ProductIntent) {
         viewModelScope.launch {
-            dataStore.isProductsSortByName.collect { res ->
-                _state.update { it.copy(sortingByName = res) }
+            actions.emit(intent)
+        }
+    }
+
+    private fun setupSortingListener() {
+        viewModelScope.launch {
+            deps.getSortingSettingUseCase(Unit).collect { sortByName ->
+                onIntent(ProductIntent.ChangeSorting(sortByName))
             }
         }
     }
 
-    fun onEvent(event: ProductEvent) {
-        when (event) {
-            is ProductEvent.AddProduct -> handleAddProduct(
-                event.name,
-                event.quantity,
-                event.unit,
-                event.listId
-            )
-
-            is ProductEvent.ToggleBought -> handleToggleBought(event.product, event.listId)
-            is ProductEvent.LoadProducts -> loadProducts(event.listId)
-            is ProductEvent.SwitchSorting -> switchSorting(event.byName)
+    private fun processActions() {
+        viewModelScope.launch {
+            actions
+                .onEach { _state.update { it.copy(isLoading = true, errorMessage = null) } }
+                .flatMapConcat { intent -> toResult(intent) }
+                .collect { result -> reduce(result) }
         }
     }
 
-    fun sortProductsByABC() = switchSorting(true)
-    fun sortProductByUserPref() = switchSorting(false)
-
-    fun deleteAllProducts() = performDeleteAll()
-    fun clearBoughtProducts() = performClearBought()
-
-    private fun switchSorting(byName: Boolean) {
-        viewModelScope.launch { dataStore.setProductsSortByName(byName) }
-        _state.update { it.copy(sortingByName = byName) }
-        loadProducts(_state.value.currentListId)
+    private fun toResult(intent: ProductIntent): Flow<ProductResult> = flow {
+        val result = when (intent) {
+            is ProductIntent.LoadProducts -> loadProducts(intent.listId)
+            is ProductIntent.AddProduct -> addProduct(intent)
+            is ProductIntent.ToggleProductBought -> toggleProduct(intent)
+            is ProductIntent.DeleteProduct -> deleteProduct(intent.productId)
+            is ProductIntent.ChangeSorting -> changeSorting(intent.byName)
+            ProductIntent.DeleteAllProducts -> deleteAllProducts()
+            ProductIntent.ClearBoughtProducts -> clearBoughtProducts()
+        }
+        emit(result)
     }
 
-    private fun handleAddProduct(name: String, quantity: String, unit: String, listId: Int) {
-        viewModelScope.launch {
-            try {
-                val item = ShopperItem(
-                    name = name,
-                    unit = unit,
-                    value = quantity.toFloatOrNull(),
-                    isBought = false,
+    private suspend fun reduce(result: ProductResult) {
+        when (result) {
+            is ProductResult.ProductsLoaded -> reduceProductsLoaded(result)
+            is ProductResult.ProductAdded -> reduceProductAdded(result)
+            is ProductResult.ProductToggled -> reduceProductToggled(result)
+            is ProductResult.ProductDeleted -> reduceProductDeleted(result)
+            is ProductResult.SortingChanged -> reduceSortingChanged(result)
+            is ProductResult.ProductsCleaned -> reduceProductsCleaned(result)
+            is ProductResult.Error -> reduceError(result)
+        }
+    }
+
+    private suspend fun loadProducts(listId: Int): ProductResult {
+        return try {
+            _state.update { it.copy(currentListId = listId) }
+            val shopperItems = deps.getProductsUseCase(
+                GetProductsParams(listId, _state.value.sortingByName)
+            ).first()
+            val products = deps.mapProductsUseCase(
+                MapProductsParams(
+                    items = shopperItems,
+                    defaultUnit = deps.defaultUnit,
+                    defaultQuantity = deps.defaultQuantity
+                )
+            )
+            ProductResult.ProductsLoaded(products)
+        } catch (e: Exception) {
+            ProductResult.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    private suspend fun addProduct(intent: ProductIntent.AddProduct): ProductResult {
+        return try {
+            deps.addProductUseCase(
+                AddProductParams(
+                    name = intent.name,
+                    unit = intent.unit.takeIf { it.isNotBlank() },
+                    value = intent.quantity.toFloatOrNull(),
+                    listId = intent.listId,
                     position = _state.value.products.size
                 )
-                itemRepository.addItem(item, listId)
-            } catch (e: SQLException) {
-                _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
-            } catch (e: IOException) {
-                _state.update { it.copy(error = "Ошибка ввода-вывода: ${e.message}") }
-            } catch (e: IllegalStateException) {
-                _state.update { it.copy(error = "Ошибка состояния: ${e.message}") }
-            }
+            )
+            loadProducts(intent.listId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка добавления: ${e.message}")
         }
     }
 
-    private fun handleToggleBought(product: Product, listId: Int) {
-        viewModelScope.launch {
-            try {
-                val item = ShopperItem(
-                    id = product.id.toInt(),
-                    name = product.name,
-                    unit = product.unit,
-                    value = product.amount.toFloatOrNull(),
-                    isBought = !product.isBought,
-                    position = 0
+    private suspend fun toggleProduct(intent: ProductIntent.ToggleProductBought): ProductResult {
+        return try {
+            deps.toggleProductBoughtUseCase(
+                ToggleProductBoughtParams(
+                    productId = intent.product.id.toInt(),
+                    listId = intent.listId,
+                    productName = intent.product.name,
+                    productUnit = intent.product.unit,
+                    productValue = intent.product.amount.toFloatOrNull(),
+                    currentIsBought = intent.product.isBought
                 )
-                itemRepository.updateItem(item, listId)
-            } catch (e: SQLException) {
-                _state.update { it.copy(error = "Ошибка базы данных: ${e.message}") }
-            } catch (e: IOException) {
-                _state.update { it.copy(error = "Ошибка ввода-вывода: ${e.message}") }
-            } catch (e: IllegalStateException) {
-                _state.update { it.copy(error = "Ошибка состояния: ${e.message}") }
-            }
+            )
+            loadProducts(intent.listId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка изменения статуса: ${e.message}")
         }
     }
 
-    private fun performDeleteAll() {
-        viewModelScope.launch {
-            _state.value.products.forEach {
-                itemRepository.deleteItemById(it.id.toInt())
-            }
+    private suspend fun deleteProduct(productId: Int): ProductResult {
+        return try {
+            deps.deleteProductUseCase(DeleteProductParams(productId))
             loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка удаления: ${e.message}")
         }
     }
 
-    private fun performClearBought() {
-        viewModelScope.launch {
-            _state.value.products.filter { it.isBought }.forEach {
-                itemRepository.deleteItemById(it.id.toInt())
-            }
+    private suspend fun changeSorting(byName: Boolean): ProductResult {
+        return try {
+            deps.saveSortingSettingUseCase(SaveSortingSettingParams(byName))
+            _state.update { it.copy(sortingByName = byName) }
             loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка изменения сортировки: ${e.message}")
         }
     }
 
-    private fun loadProducts(listId: Int) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, currentListId = listId) }
-            itemRepository.getAllItems(listId, _state.value.sortingByName)
-                .catch { e -> handleLoadError(e) }
-                .collect { resource -> handleLoadResult(resource) }
+    private suspend fun deleteAllProducts(): ProductResult {
+        return try {
+            deps.deleteAllProductsUseCase(
+                DeleteAllProductsParams(listId = _state.value.currentListId)
+            )
+            loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка удаления всех товаров: ${e.message}")
         }
     }
 
-    private fun handleLoadError(e: Throwable) {
+    private suspend fun clearBoughtProducts(): ProductResult {
+        return try {
+            deps.clearBoughtProductsUseCase(
+                ClearBoughtProductsParams(listId = _state.value.currentListId)
+            )
+            loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка очистки купленных товаров: ${e.message}")
+        }
+    }
+
+    private suspend fun reduceProductsLoaded(result: ProductResult.ProductsLoaded) {
         _state.update {
-            it.copy(isLoading = false, error = "Ошибка загрузки товаров: ${e.message}")
+            it.copy(
+                isLoading = false,
+                products = result.items,
+                errorMessage = null
+            )
         }
     }
 
-    private fun handleLoadResult(resource: Resource<List<ShopperItem>>) {
-        when (resource) {
-            is Resource.Success -> {
-                val products = mapper.mapItemsToProducts(resource.data)
-                _state.update { it.copy(isLoading = false, products = products, error = null) }
-            }
-
-            is Resource.Error -> {
-                _state.update { it.copy(isLoading = false, error = "Ошибка загрузки товаров") }
-            }
+    private suspend fun reduceProductAdded(result: ProductResult.ProductAdded) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                products = result.products,
+                errorMessage = null
+            )
         }
     }
 
-//    private fun handleError(e: Exception, defaultMessage: String) {
-//        val message = when (e) {
-//            is SQLException -> "Ошибка базы данных: ${e.message}"
-//            is IOException -> "Ошибка ввода-вывода: ${e.message}"
-//            is IllegalStateException -> "Ошибка состояния: ${e.message}"
-//            else -> "$defaultMessage: ${e.message}"
-//        }
-//        _state.update { it.copy(error = message) }
-//    }
-}
-
-private class ProductMapper(
-    private val defaultUnit: String,
-    private val defaultQuantity: String
-) {
-    fun mapItemsToProducts(items: List<ShopperItem>?): List<Product> {
-        return items?.map { mapItemToProduct(it) } ?: emptyList()
+    private suspend fun reduceProductToggled(result: ProductResult.ProductToggled) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                products = result.products,
+                errorMessage = null
+            )
+        }
     }
 
-    fun mapItemToProduct(item: ShopperItem): Product {
-        return Product(
-            id = item.id.toLong(),
-            name = item.name,
-            amount = formatValue(item.value),
-            unit = item.unit ?: defaultUnit,
-            isBought = item.isBought
-        )
+    private suspend fun reduceProductDeleted(result: ProductResult.ProductDeleted) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                products = result.products,
+                errorMessage = null
+            )
+        }
     }
 
-    private fun formatValue(value: Float?): String {
-        return value?.let {
-            if (it == it.toLong().toFloat()) {
-                it.toLong().toString()
-            } else {
-                it.toString()
-            }
-        } ?: defaultQuantity
+    private suspend fun reduceSortingChanged(result: ProductResult.SortingChanged) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                sortingByName = result.byName,
+                products = result.products,
+                errorMessage = null
+            )
+        }
+    }
+
+    private suspend fun reduceProductsCleaned(result: ProductResult.ProductsCleaned) {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                products = result.products,
+                errorMessage = null
+            )
+        }
+    }
+
+    private suspend fun reduceError(result: ProductResult.Error) {
+        _effect.send(ProductEffect.ShowError(result.message))
+        _state.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = result.message
+            )
+        }
     }
 }

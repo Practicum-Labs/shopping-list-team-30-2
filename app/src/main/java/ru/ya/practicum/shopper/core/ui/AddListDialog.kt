@@ -72,7 +72,8 @@ fun AddListDialog(
                 Spacer(modifier = Modifier.height(24.dp))
                 DialogButtons(
                     onDismiss = onDismiss,
-                    onCreate = { onCreate(listName) }
+                    onCreate = { onCreate(listName) },
+                    isCreateEnabled = listName.isNotBlank()
                 )
             }
         }
@@ -151,7 +152,8 @@ private fun ListNameTextField(
 @Composable
 private fun DialogButtons(
     onDismiss: () -> Unit,
-    onCreate: () -> Unit
+    onCreate: () -> Unit,
+    isCreateEnabled: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -165,7 +167,8 @@ private fun DialogButtons(
         Spacer(modifier = Modifier.width(8.dp))
         PlainButton(
             buttonTitle = R.string.create_button_text,
-            onClick = onCreate
+            onClick = onCreate,
+            enabled = isCreateEnabled
         )
     }
 }

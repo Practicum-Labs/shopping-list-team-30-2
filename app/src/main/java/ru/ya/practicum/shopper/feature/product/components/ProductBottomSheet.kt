@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.ui.theme.GreenLight
-import ru.ya.practicum.shopper.feature.product.ProductState
+import ru.ya.practicum.shopper.feature.product.ProductViewState
 
 data class ProductBottomSheetCallBacks(
     val onSortByABC: () -> Unit,
@@ -43,7 +43,7 @@ data class ProductBottomSheetCallBacks(
 @OptIn(ExperimentalMaterial3Api::class)
 data class ProductBottomSheetConfig(
     val sheetState: SheetState,
-    val state: ProductState,
+    val state: ProductViewState,
     val onDismissRequest: () -> Unit,
     val onDeleteAll: () -> Unit,
     val onClearBought: () -> Unit,
