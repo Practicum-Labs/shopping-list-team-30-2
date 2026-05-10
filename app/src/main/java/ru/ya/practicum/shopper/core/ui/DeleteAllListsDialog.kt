@@ -34,7 +34,9 @@ import ru.ya.practicum.shopper.core.ui.theme.Theme
 @Composable
 fun DeleteAllListsDialog(
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    deleteOneList: Boolean = false,
+    listName: String = ""
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -45,7 +47,12 @@ fun DeleteAllListsDialog(
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            DeleteAllListsDialogContent(onDismiss = onDismiss, onConfirm = onConfirm)
+            DeleteAllListsDialogContent(
+                onDismiss = onDismiss,
+                onConfirm = onConfirm,
+                deleteOneList,
+                listName
+            )
         }
     }
 }
@@ -53,7 +60,9 @@ fun DeleteAllListsDialog(
 @Composable
 private fun DeleteAllListsDialogContent(
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    deleteOneList: Boolean,
+    listName: String
 ) {
     Column(
         modifier = Modifier
@@ -71,7 +80,14 @@ private fun DeleteAllListsDialogContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = stringResource(R.string.delete_all_lists_title),
+            text = if (deleteOneList) {
+                stringResource(
+                    R.string.delete_list_text,
+                    listName
+                )
+            } else {
+                stringResource(R.string.delete_all_lists_title)
+            },
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,

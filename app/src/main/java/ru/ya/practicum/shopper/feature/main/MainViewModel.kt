@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.core.model.ShoppingList
+import ru.ya.practicum.shopper.domain.api.ShoppingListItemInteractor
 import ru.ya.practicum.shopper.domain.usecase.list.CreateListParams
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsParams
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteListParams
@@ -28,14 +30,85 @@ import ru.ya.practicum.shopper.domain.usecase.list.UpdateListNameParams
 import java.io.IOException
 import java.sql.SQLException
 
-@Suppress("TooManyFunctions")
+data class MainState(
+    val isLoading: Boolean = true,
+    val lists: List<ShoppingList> = emptyList(),
+    val error: String? = null,
+    val showAddDialog: Boolean = false,
+    val showIconPicker: Boolean = false,
+    val selectedIconId: Int = 0,
+    val newListName: String = "",
+    val editingListId: Int? = null,
+    val showDeleteAllDialog: Boolean = false,
+    val isSearchActive: Boolean = false,
+    val searchQuery: String = "",
+    val searchInput: String = ""
+)
+
+data class ListState(
+    val showEditShoppingListDialog: Boolean = false,
+    val list: ShoppingList? = null,
+    val showDeleteListDialog: Boolean = false
+)
+
+sealed class MainIntent {
+    data class CreateList(val name: String, val iconId: Int) : MainIntent()
+    data class DeleteList(val listId: Int) : MainIntent()
+    data class UpdateListName(val listId: Int, val newName: String) : MainIntent()
+    data class UpdateListIcon(val listId: Int, val newIconId: Int) : MainIntent()
+    data class ShowIconPickerForList(val listId: Int) : MainIntent()
+    data class UpdateSearchQuery(val query: String) : MainIntent()
+    data class SelectIcon(val iconId: Int) : MainIntent()
+    data class UpdateNewListName(val name: String) : MainIntent()
+    data object ShowAddDialog : MainIntent()
+    data object HideAddDialog : MainIntent()
+    data object ShowIconPicker : MainIntent()
+    data object HideIconPicker : MainIntent()
+    data object LoadLists : MainIntent()
+    data object ShowDeleteAllDialog : MainIntent()
+    data object HideDeleteAllDialog : MainIntent()
+    data object ConfirmDeleteAll : MainIntent()
+    data object ToggleSearch : MainIntent()
+    data object CloseSearch : MainIntent()
+    data object PerformSearch : MainIntent()
+}
+
+sealed class MainResult {
+    data class ListsLoaded(val lists: List<ShoppingList>) : MainResult()
+    data class ListCreated(val lists: List<ShoppingList>) : MainResult()
+    data class ListDeleted(val lists: List<ShoppingList>) : MainResult()
+    data class ListNameUpdated(val lists: List<ShoppingList>) : MainResult()
+    data class ListIconUpdated(val lists: List<ShoppingList>) : MainResult()
+    data class ListsDeleted(val lists: List<ShoppingList>) : MainResult()
+    data class Error(val message: String) : MainResult()
+}
+
+sealed class MainEffect {
+    data class ShowError(val message: String) : MainEffect()
+}
+
+sealed class ListEvents {
+    object HideEditShoppingListDialog : ListEvents()
+    data class ShowEditShoppingListDialog(val list: ShoppingList) : ListEvents()
+    data class SaveNewListName(val newName: String) : ListEvents()
+    data class ShowDeleteListDialog(val list: ShoppingList) : ListEvents()
+    object HideDeleteListDialog : ListEvents()
+    object DeleteList : ListEvents()
+    data class CopyList(val list: ShoppingList, val newName: String) : ListEvents()
+}
+
+@Suppress("TooManyFunctions", "LargeClass")
 class MainViewModel(
     private val userId: String,
-    private val useCases: MainUseCases
+    private val useCases: MainUseCases,
+    private val shoppingListItemInteractor: ShoppingListItemInteractor
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
+
+    private val _stateList = MutableStateFlow(ListState())
+    val stateList: StateFlow<ListState> = _stateList.asStateFlow()
 
     private val _effect = Channel<MainEffect>()
     val effect: Flow<MainEffect> = _effect.receiveAsFlow()
@@ -52,6 +125,18 @@ class MainViewModel(
     fun onIntent(intent: MainIntent) {
         viewModelScope.launch {
             actions.emit(intent)
+        }
+    }
+
+    fun onListEvent(event: ListEvents) {
+        when (event) {
+            is ListEvents.HideEditShoppingListDialog -> hideEditShoppingListDialog()
+            is ListEvents.ShowEditShoppingListDialog -> showEditShoppingListDialog(event.list)
+            is ListEvents.SaveNewListName -> saveNewListName(event.newName)
+            is ListEvents.ShowDeleteListDialog -> showDeleteListDialog(event.list)
+            is ListEvents.HideDeleteListDialog -> hideDeleteListDialog()
+            is ListEvents.DeleteList -> deleteList()
+            is ListEvents.CopyList -> copyList(event.list, event.newName)
         }
     }
 
@@ -74,6 +159,77 @@ class MainViewModel(
                 .flatMapConcat { intent -> toResult(intent) }
                 .collect { result -> reduce(result) }
         }
+    }
+
+    private fun copyList(list: ShoppingList, newName: String) {
+        viewModelScope.launch {
+            val coreShoppingList = ru.ya.practicum.shopper.core.model.ShoppingList(
+                id = list.id,
+                name = list.name,
+                iconResId = list.iconResId,
+                userId = userId
+            )
+            shoppingListItemInteractor.copyShoppingList(coreShoppingList, newName)
+            loadListsAfterAction()
+        }
+    }
+
+    private fun showEditShoppingListDialog(list: ShoppingList) {
+        _stateList.update {
+            it.copy(
+                showEditShoppingListDialog = true,
+                list = list
+            )
+        }
+    }
+
+    private fun hideEditShoppingListDialog() {
+        _stateList.update {
+            it.copy(showEditShoppingListDialog = false)
+        }
+    }
+
+    private fun showDeleteListDialog(list: ShoppingList) {
+        _stateList.update {
+            it.copy(
+                showDeleteListDialog = true,
+                list = list
+            )
+        }
+    }
+
+    private fun hideDeleteListDialog() {
+        _stateList.update {
+            it.copy(showDeleteListDialog = false)
+        }
+    }
+
+    private fun deleteList() {
+        viewModelScope.launch {
+            val id = _stateList.value.list?.id
+            if (id != null) {
+                shoppingListItemInteractor.deleteShoppingList(id)
+                loadListsAfterAction()
+            }
+        }
+        _stateList.update { it.copy(showDeleteListDialog = false) }
+    }
+
+    private fun saveNewListName(newName: String) {
+        viewModelScope.launch {
+            val id = _stateList.value.list?.id
+            if (id != null) {
+                shoppingListItemInteractor.renameShoppingListItem(id, newName)
+                loadListsAfterAction()
+            }
+        }
+        _stateList.update { it.copy(showEditShoppingListDialog = false) }
+    }
+
+    private suspend fun loadListsAfterAction() {
+        val shopperLists = useCases.getLists(GetListsParams(userId)).first()
+        val uiLists = useCases.mapLists(MapListsParams(shopperLists))
+        _state.update { it.copy(lists = uiLists) }
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -205,7 +361,7 @@ class MainViewModel(
         }
     }
 
-    // ... все handle функции остаются без изменений ...
+    // Handle functions
     private suspend fun handleShowAddDialog(): MainResult {
         _state.update { it.copy(showAddDialog = true, showIconPicker = false, error = null) }
         return MainResult.ListsLoaded(_state.value.lists)
@@ -283,7 +439,6 @@ class MainViewModel(
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    // ... все reduce функции остаются без изменений ...
     private suspend fun reduceListsLoaded(result: MainResult.ListsLoaded) {
         _state.update {
             it.copy(
@@ -361,7 +516,7 @@ class MainViewModel(
         }
     }
 
-    private companion object {
+    companion object {
         const val SEARCH_DEBOUNCE_MS = 500L
     }
 }

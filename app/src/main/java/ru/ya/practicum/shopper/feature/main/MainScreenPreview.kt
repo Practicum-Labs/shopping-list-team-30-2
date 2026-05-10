@@ -17,6 +17,7 @@ import ru.ya.practicum.shopper.feature.main.components.IconView
 import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
 import ru.ya.practicum.shopper.feature.main.components.ShoppingListCard
 import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
+import ru.ya.practicum.shopper.feature.main.components.SwipeCardActions
 
 @Preview
 @Composable
@@ -139,7 +140,8 @@ private fun ShoppingListsContentPreviewLight() {
     Theme(darkTheme = false) {
         ShoppingListsContent(
             lists = previewList,
-            onListClick = {}
+            listActions = SwipeCardActions({}, {}, {}, {}, {})
+
         )
     }
 }
@@ -150,7 +152,8 @@ private fun ShoppingListsContentPreviewDark() {
     Theme(darkTheme = true) {
         ShoppingListsContent(
             lists = previewList,
-            onListClick = {}
+            listActions = SwipeCardActions({}, {}, {}, {}, {})
+
         )
     }
 }

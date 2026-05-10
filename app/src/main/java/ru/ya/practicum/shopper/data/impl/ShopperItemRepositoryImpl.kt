@@ -1,7 +1,7 @@
 package ru.ya.practicum.shopper.data.impl
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import ru.ya.practicum.shopper.data.converter.ShopperItemMapper
 import ru.ya.practicum.shopper.data.local.dao.ShopperItemDao
 import ru.ya.practicum.shopper.domain.model.ShopperItem
@@ -28,12 +28,20 @@ class ShopperItemRepositoryImpl(
         dao.update(mapper.toEntity(item, listId))
     }
 
-    override fun getAllItems(listId: Int, orderByName: Boolean): Flow<List<ShopperItem>> = flow {
-        val queryResult =
-            if (orderByName) dao.getItemsOrderedByName(listId) else dao.getItems(listId)
+    override suspend fun insertItems(items: List<ShopperItem>, listId: Int) {
+        for (item in items) {
+            dao.insert(mapper.toEntity(item, listId))
+        }
+    }
 
-        queryResult.collect { entities ->
-            emit(entities.map { mapper.toDomain(it) })
+    override fun getAllItems(listId: Int, orderByName: Boolean): Flow<List<ShopperItem>> {
+        val queryResult = if (orderByName) {
+            dao.getItemsOrderedByName(listId)
+        } else {
+            dao.getItems(listId)
+        }
+        return queryResult.map { entities ->
+            entities.map { mapper.toDomain(it) }
         }
     }
 

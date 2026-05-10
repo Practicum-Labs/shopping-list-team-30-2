@@ -26,7 +26,8 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = OnSurfaceDark,
     onSurfaceVariant = OnSurfaceVariantDark,
     inverseOnSurface = InverseOnSurfaceDark,
-    outline = OutlineDark
+    outline = OutlineDark,
+    surfaceContainerHighest = SurfaceContainerHighestDark
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -45,7 +46,8 @@ private val LightColorScheme = lightColorScheme(
     onSurface = OnSurfaceLight,
     onSurfaceVariant = OnSurfaceVariantLight,
     inverseOnSurface = InverseOnSurfaceLight,
-    outline = OutlineLight
+    outline = OutlineLight,
+    surfaceContainerHighest = SurfaceContainerHighestLight
 )
 
 @Composable

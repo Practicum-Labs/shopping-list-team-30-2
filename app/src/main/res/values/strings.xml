@@ -22,9 +22,11 @@
     <string name="new_list">Новый список</string>
     <string name="cancel_button_text">Отмена</string>
     <string name="create_button_text">Создать</string>
+    <string name="rename_button_text">Переименовать</string>
     <string name="delete_all_lists_title">Удалить все списки?</string>
     <string name="delete_all_lists_body">Это действие нельзя будет отменить</string>
     <string name="delete_button_text">Удалить</string>
+    <string name="delete_list_text">Удалить список «%s»?</string>
     <string name="search_lists_hint">Поиск списков</string>
     <string name="cd_clear">Очистить</string>
     <string name="search_not_found_title">Мы не смогли найти то, \nчто вы искали</string>
@@ -57,4 +59,5 @@
     <string name="sortByUserPref">Пользовательская</string>
     <string name="deleteAllConfirm">Удалить все товары?</string>
     <string name="clearBoughtConfirm">Удалить все купленные товары?</string>
+    <string name="copy_list"> (Копия)</string>
 </resources>
