@@ -57,4 +57,9 @@
     <string name="sortByUserPref">Пользовательская</string>
     <string name="deleteAllConfirm">Удалить все товары?</string>
     <string name="clearBoughtConfirm">Удалить все купленные товары?</string>
+
+    <string name="confirm_password">Подтвердите пароль</string>
+    <string name="password_recovery">Восстановление пароля</string>
+    <string name="send_recovery_email">Отправить письмо для восстановления пароля</string>
+    <string name="forgot_password">Забыли пароль?</string>
 </resources>

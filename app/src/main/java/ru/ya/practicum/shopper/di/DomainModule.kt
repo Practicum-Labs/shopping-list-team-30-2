@@ -5,8 +5,10 @@ import org.koin.dsl.module
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.data.impl.ShopperItemRepositoryImpl
 import ru.ya.practicum.shopper.data.impl.ShopperListRepositoryImpl
+import ru.ya.practicum.shopper.data.impl.SortingSettingsRepositoryImpl
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
+import ru.ya.practicum.shopper.domain.repository.SortingSettingsRepository
 import ru.ya.practicum.shopper.domain.usecase.list.CreateListUseCase
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsUseCase
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteListUseCase
@@ -25,6 +27,7 @@ import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
 import ru.ya.practicum.shopper.feature.main.MainUseCases
 import ru.ya.practicum.shopper.feature.main.MainViewModel
+import ru.ya.practicum.shopper.feature.onboard.OnboardViewModel
 import ru.ya.practicum.shopper.feature.product.ProductDependencies
 import ru.ya.practicum.shopper.feature.product.ProductViewModel
 
@@ -44,8 +47,12 @@ val domainModule = module {
     factory { ClearBoughtProductsUseCase(get()) }
     factory { GetProductsUseCase(get()) }
     factory { GetSortingSettingUseCase(get()) }
-    factory { SaveSortingSettingUseCase(get()) }
+    single<SortingSettingsRepository> {
+        SortingSettingsRepositoryImpl(get())
+    }
     factory { MapProductsUseCase() }
+
+    factory { OnboardViewModel(get()) }
 
     factory { GetListsUseCase(get()) }
     factory { CreateListUseCase(get()) }
@@ -89,4 +96,5 @@ val domainModule = module {
             mapLists = get()
         )
     }
+    factory { SaveSortingSettingUseCase(get()) }
 }

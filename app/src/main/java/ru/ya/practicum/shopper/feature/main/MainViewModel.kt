@@ -205,7 +205,6 @@ class MainViewModel(
         }
     }
 
-    // ... все handle функции остаются без изменений ...
     private suspend fun handleShowAddDialog(): MainResult {
         _state.update { it.copy(showAddDialog = true, showIconPicker = false, error = null) }
         return MainResult.ListsLoaded(_state.value.lists)
@@ -283,7 +282,6 @@ class MainViewModel(
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    // ... все reduce функции остаются без изменений ...
     private suspend fun reduceListsLoaded(result: MainResult.ListsLoaded) {
         _state.update {
             it.copy(

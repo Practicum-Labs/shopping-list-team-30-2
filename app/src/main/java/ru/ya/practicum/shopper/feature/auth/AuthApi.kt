@@ -1,5 +1,6 @@
 package ru.ya.practicum.shopper.feature.auth
 
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -17,6 +18,9 @@ interface AuthApi {
 
     @GET("/auth/check")
     suspend fun checkAuth(@Header("Authorization") token: String): CheckResponse
+
+    @POST("/auth/recovery")
+    suspend fun recoverPassword(@Header("email") email: String): Response<Unit>
 }
 
 data class RegisterRequest(val email: String, val password: String)
