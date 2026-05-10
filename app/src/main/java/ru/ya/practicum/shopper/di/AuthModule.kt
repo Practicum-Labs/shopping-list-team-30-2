@@ -8,6 +8,8 @@ import ru.ya.practicum.shopper.feature.auth.AuthApi
 import ru.ya.practicum.shopper.feature.auth.AuthDataStore
 import ru.ya.practicum.shopper.feature.auth.AuthRepository
 import ru.ya.practicum.shopper.feature.auth.AuthViewModel
+import ru.ya.practicum.shopper.feature.auth.RecoveryViewModel
+import ru.ya.practicum.shopper.feature.auth.SignUpViewModel
 
 val authModule = module {
     single { AuthDataStore(androidContext()) }
@@ -17,4 +19,6 @@ val authModule = module {
     single { AuthRepository(get(), get()) }
 
     viewModel { AuthViewModel(get()) }
+    viewModel { SignUpViewModel(get()) }
+    viewModel { RecoveryViewModel() }
 }

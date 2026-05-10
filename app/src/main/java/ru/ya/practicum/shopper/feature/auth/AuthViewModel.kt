@@ -26,11 +26,15 @@ sealed class AuthIntent {
     data object ToggleMode : AuthIntent()
     data object Submit : AuthIntent()
     data object ResetError : AuthIntent()
+    data object NavigateToSignUp : AuthIntent()
+    data object NavigateToRecovery : AuthIntent()
 }
 
 sealed class AuthEffect {
     data class ShowError(val message: String) : AuthEffect()
     data object NavigateToMain : AuthEffect()
+    data object NavigateToSignUp : AuthEffect()
+    data object NavigateToRecovery : AuthEffect()
 }
 
 class AuthViewModel(
@@ -47,9 +51,11 @@ class AuthViewModel(
         when (intent) {
             is AuthIntent.UpdateEmail -> updateField(intent.email, isEmail = true)
             is AuthIntent.UpdatePassword -> updateField(intent.password, isEmail = false)
-            AuthIntent.ToggleMode -> toggleMode()
             AuthIntent.Submit -> submit()
             AuthIntent.ResetError -> resetError()
+            AuthIntent.NavigateToSignUp -> sendEffect(AuthEffect.NavigateToSignUp)
+            AuthIntent.NavigateToRecovery -> sendEffect(AuthEffect.NavigateToRecovery)
+            AuthIntent.ToggleMode -> {}
         }
     }
 
@@ -60,18 +66,6 @@ class AuthViewModel(
             } else {
                 it.copy(password = value, error = null, isLoading = false)
             }
-        }
-    }
-
-    private fun toggleMode() {
-        _state.update {
-            it.copy(
-                isLoginMode = !it.isLoginMode,
-                error = null,
-                isLoading = false,
-                email = "",
-                password = ""
-            )
         }
     }
 
@@ -100,8 +94,18 @@ class AuthViewModel(
                 false
             }
 
+            !AuthValidation.isEmailValid(state.email) -> {
+                updateState(error = "Введите корректный email", isLoading = false)
+                false
+            }
+
             state.password.isBlank() -> {
                 updateState(error = "Введите пароль", isLoading = false)
+                false
+            }
+
+            !AuthValidation.isPasswordValid(state.password) -> {
+                updateState(error = "Пароль должен быть не менее 6 символов", isLoading = false)
                 false
             }
 

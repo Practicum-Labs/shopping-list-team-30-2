@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -166,7 +167,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.coroutines.android)
-
+    implementation(libs.firebase.auth.ktx.v2321)
 
     ksp(libs.androidx.room.compiler)
 
@@ -177,6 +178,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
 
     detektPlugins(libs.detekt.formatting)
 }

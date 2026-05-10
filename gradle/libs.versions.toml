@@ -3,6 +3,7 @@ agp = "9.2.1"
 converterGson = "3.0.0"
 coreKtx = "1.18.0"
 datastorePreferences = "1.2.1"
+firebaseAuthKtxVersion = "23.2.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -16,6 +17,7 @@ loggingInterceptor = "5.3.2"
 navigationCompose = "2.9.8"
 room = "2.8.4"
 ksp = "2.3.6"
+google-services = "4.4.4"
 
 koinAndroidxCompose = "4.2.1"
 koin = "4.2.1"
@@ -31,6 +33,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+firebase-auth-ktx-v2321 = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtxVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -57,9 +60,9 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 
-
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
