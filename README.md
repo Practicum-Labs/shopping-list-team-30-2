@@ -70,6 +70,13 @@ build/reports/detekt/
 ./gradlew connectedAndroidTest
 ```
 
+Предварительно необходимо создать файл develop.properties и внести в него следующее содержание:
+
+```bash
+TEST_USER_EMAIL = login
+TEST_USER_PASSWORD = password
+```
+
 ## 📁 Структура проекта (схематично)
 
 ```
