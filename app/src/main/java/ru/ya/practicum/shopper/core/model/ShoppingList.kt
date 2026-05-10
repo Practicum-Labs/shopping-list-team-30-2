@@ -4,4 +4,5 @@ data class ShoppingList(
     val id: Int = 0,
     val name: String,
     val iconResId: Int,
+    val userId: String = ""
 )

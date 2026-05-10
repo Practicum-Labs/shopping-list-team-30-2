@@ -40,4 +40,8 @@ class ShopperListRepositoryImpl(
                 Resource.Success(entities.map { mapper.toDomain(it) })
             }
     }
+
+    override suspend fun rename(id: Int, newName: String) {
+        dao.rename(id, newName)
+    }
 }

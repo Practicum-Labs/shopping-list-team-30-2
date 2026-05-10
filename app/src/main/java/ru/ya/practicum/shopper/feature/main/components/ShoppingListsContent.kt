@@ -13,8 +13,7 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 @Composable
 fun ShoppingListsContent(
     lists: List<ShoppingList>,
-    onListClick: (ShoppingList) -> Unit,
-    onListIconClick: ((ShoppingList) -> Unit)? = null,
+    listActions: SwipeCardActions,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.dp16)
 ) {
@@ -27,10 +26,9 @@ fun ShoppingListsContent(
             items = lists,
             key = { it.id }
         ) { shoppingList ->
-            ShoppingListCard(
+            SwipeCardRow(
                 shoppingList = shoppingList,
-                onClick = onListClick,
-                onIconClick = onListIconClick
+                actions = listActions
             )
         }
     }
