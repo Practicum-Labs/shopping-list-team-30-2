@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +65,7 @@ fun MainScreen(
     val dataStore: OnboardDataStore = koinInject()
     var userId by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    val resetSwipeTrigger = remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         userId = dataStore.getOrCreateUserId()
@@ -101,7 +104,8 @@ fun MainScreen(
             onNavigateToProduct = onNavigateToProduct,
             onThemeToggle = onThemeToggle,
             onIntent = viewModel::onIntent,
-            onListEvent = viewModel::onListEvent
+            onListEvent = viewModel::onListEvent,
+            resetSwipeTrigger = resetSwipeTrigger
         ),
         modifier = modifier
     )
@@ -125,7 +129,8 @@ data class MainScreenCallbacks(
     val onNavigateToProduct: (listId: Int, listName: String) -> Unit,
     val onThemeToggle: () -> Unit,
     val onIntent: (MainIntent) -> Unit,
-    val onListEvent: (ListEvents) -> Unit
+    val onListEvent: (ListEvents) -> Unit,
+    val resetSwipeTrigger: MutableState<Int>
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,7 +211,8 @@ private fun MainScaffold(
                 state = state,
                 listState = listState,
                 listActions = listActions,
-                onListEvent = callbacks.onListEvent
+                onListEvent = callbacks.onListEvent,
+                resetSwipeTrigger = callbacks.resetSwipeTrigger
             )
         }
     }
@@ -217,6 +223,10 @@ private fun rememberSwipeCardActions(
     callbacks: MainScreenCallbacks
 ): SwipeCardActions {
     val copyText = stringResource(R.string.copy_list)
+    var resetCurrentSwipe by remember { mutableStateOf<(() -> Unit)?>(null) }
+    LaunchedEffect(callbacks.resetSwipeTrigger.value) {
+        resetCurrentSwipe?.invoke()
+    }
     return remember(callbacks) {
         SwipeCardActions(
             onClick = { shoppingList ->
@@ -235,6 +245,9 @@ private fun rememberSwipeCardActions(
             },
             onRename = { shoppingList ->
                 callbacks.onListEvent(ListEvents.ShowEditShoppingListDialog(shoppingList))
+            },
+            onResetSwipeRequest = { resetFn ->
+                resetCurrentSwipe = resetFn
             }
         )
     }
@@ -341,7 +354,8 @@ private fun MainScreenBody(
     state: MainState,
     listState: ListState,
     listActions: SwipeCardActions,
-    onListEvent: (ListEvents) -> Unit
+    onListEvent: (ListEvents) -> Unit,
+    resetSwipeTrigger: MutableState<Int>
 ) {
     val filteredLists = if (state.searchQuery.isBlank()) {
         state.lists
@@ -378,7 +392,8 @@ private fun MainScreenBody(
             )
             MainScreenDialogs(
                 listState = listState,
-                onListEvent = onListEvent
+                onListEvent = onListEvent,
+                resetSwipeTrigger = resetSwipeTrigger
             )
         }
     }
@@ -387,7 +402,8 @@ private fun MainScreenBody(
 @Composable
 private fun MainScreenDialogs(
     listState: ListState,
-    onListEvent: (ListEvents) -> Unit
+    onListEvent: (ListEvents) -> Unit,
+    resetSwipeTrigger: MutableState<Int>
 ) {
     when {
         listState.showEditShoppingListDialog -> {
@@ -400,7 +416,10 @@ private fun MainScreenDialogs(
 
         listState.showDeleteListDialog -> {
             DeleteAllListsDialog(
-                onDismiss = { onListEvent(ListEvents.HideDeleteListDialog) },
+                onDismiss = {
+                    onListEvent(ListEvents.HideDeleteListDialog)
+                    resetSwipeTrigger.value++
+                },
                 onConfirm = { onListEvent(ListEvents.DeleteList) },
                 deleteOneList = true,
                 listName = listState.list?.name ?: ""
