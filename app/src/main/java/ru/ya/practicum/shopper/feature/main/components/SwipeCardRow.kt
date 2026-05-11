@@ -49,6 +49,7 @@ fun SwipeCardRow(
     actions: SwipeCardActions
 ) {
     BoxWithConstraints {
+        val scope = rememberCoroutineScope()
         val state = rememberSwipeState(maxWidth, actions.onDelete, shoppingList)
         val isDeleteMode = state.currentValue == SwipeState.DELETED
 
@@ -58,6 +59,17 @@ fun SwipeCardRow(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             if (isDeleteMode) {
+                val resetSwipe: () -> Unit = remember {
+                    {
+                        scope.launch {
+                            state.animateTo(SwipeState.CLOSED)
+                        }
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    actions.onResetSwipeRequest?.invoke(resetSwipe)
+                }
                 DeleteModeButton(onDelete = { actions.onDelete(shoppingList) })
             } else {
                 ActionButtonsRow(
@@ -226,7 +238,7 @@ data class SwipeCardActions(
     val onDelete: (ShoppingList) -> Unit,
     val onCopy: (ShoppingList) -> Unit,
     val onRename: (ShoppingList) -> Unit,
-    val onSwipeStateProvided: (resetSwipe: () -> Unit) -> Unit = {}
+    val onResetSwipeRequest: ((resetSwipe: () -> Unit) -> Unit)? = null
 )
 
 enum class SwipeState { CLOSED, BUTTONS, DELETED }
