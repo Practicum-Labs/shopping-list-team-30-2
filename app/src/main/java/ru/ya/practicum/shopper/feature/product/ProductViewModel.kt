@@ -47,6 +47,7 @@ data class ProductDependencies(
     val mapProductsUseCase: MapProductsUseCase
 )
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Suppress("TooManyFunctions", "TooGenericExceptionCaught")
 class ProductViewModel(
     private val deps: ProductDependencies

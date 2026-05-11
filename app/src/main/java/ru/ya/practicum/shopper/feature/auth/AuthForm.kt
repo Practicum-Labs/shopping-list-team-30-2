@@ -31,58 +31,116 @@ fun AuthForm(
         AuthTitle(isLoginMode = state.isLoginMode)
         Spacer(modifier = Modifier.height(32.dp))
 
-        EmailField(
-            value = state.email,
-            onValueChange = {
-                onIntent(AuthIntent.UpdateEmail(it))
-                onIntent(AuthIntent.ResetError)
-            },
-            isError = isEmailError(state),
-            onNext = {
-                passwordFocusRequester.requestFocus()
-            }
+        AuthEmailSection(
+            state = state,
+            onIntent = onIntent,
+            passwordFocusRequester = passwordFocusRequester
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PasswordField(
-            value = state.password,
-            onValueChange = {
-                onIntent(AuthIntent.UpdatePassword(it))
-                onIntent(AuthIntent.ResetError)
-            },
-            isError = isPasswordError(state),
-            onSubmit = { onIntent(AuthIntent.Submit) },
-            modifier = Modifier.focusRequester(passwordFocusRequester)
+        AuthPasswordSection(
+            state = state,
+            onIntent = onIntent,
+            passwordFocusRequester = passwordFocusRequester
         )
 
-        ErrorMessage(error = state.error)
         Spacer(modifier = Modifier.height(24.dp))
 
-        SubmitButton(
-            isLoading = state.isLoading,
-            isLoginMode = state.isLoginMode,
-            onClick = { onIntent(AuthIntent.Submit) }
+        AuthSubmitSection(
+            state = state,
+            onIntent = onIntent
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ToggleModeButton(
-            isLoginMode = state.isLoginMode,
-            onClick = {
-                onIntent(AuthIntent.ToggleMode)
-                onIntent(AuthIntent.ResetError)
-            }
+        AuthToggleButton(
+            state = state,
+            onIntent = onIntent
         )
     }
 }
 
 @Composable
-private fun isEmailError(state: AuthState): Boolean {
-    return state.error?.contains(stringResource(R.string.email), ignoreCase = true) == true
+private fun AuthEmailSection(
+    state: AuthState,
+    onIntent: (AuthIntent) -> Unit,
+    passwordFocusRequester: FocusRequester
+) {
+    val emailError = if (state.email.isNotBlank() && !AuthValidation.isEmailValid(state.email)) {
+        "Введите корректный email"
+    } else {
+        null
+    }
+
+    EmailField(
+        value = state.email,
+        onValueChange = {
+            onIntent(AuthIntent.UpdateEmail(it))
+            onIntent(AuthIntent.ResetError)
+        },
+        error = emailError ?: state.error?.takeIf { it.contains("email", ignoreCase = true) },
+        onNext = {
+            passwordFocusRequester.requestFocus()
+        }
+    )
 }
 
 @Composable
-private fun isPasswordError(state: AuthState): Boolean {
-    return state.error?.contains(stringResource(R.string.password), ignoreCase = true) == true
+private fun AuthPasswordSection(
+    state: AuthState,
+    onIntent: (AuthIntent) -> Unit,
+    passwordFocusRequester: FocusRequester
+) {
+    val passwordError =
+        if (state.password.isNotBlank() && !AuthValidation.isPasswordValid(state.password)) {
+            "Пароль должен быть не менее 6 символов"
+        } else {
+            null
+        }
+
+    PasswordField(
+        value = state.password,
+        onValueChange = {
+            onIntent(AuthIntent.UpdatePassword(it))
+            onIntent(AuthIntent.ResetError)
+        },
+        error = passwordError ?: state.error?.takeIf { it.contains("пароль", ignoreCase = true) },
+        onSubmit = { onIntent(AuthIntent.Submit) },
+        modifier = Modifier.focusRequester(passwordFocusRequester)
+    )
+}
+
+@Composable
+private fun AuthSubmitSection(
+    state: AuthState,
+    onIntent: (AuthIntent) -> Unit
+) {
+    val isFormValid =
+        AuthValidation.isEmailValid(state.email) && AuthValidation.isPasswordValid(state.password)
+
+    SubmitButton(
+        isLoading = state.isLoading,
+        text = if (state.isLoginMode) stringResource(R.string.login) else stringResource(R.string.sign_in),
+        onClick = { onIntent(AuthIntent.Submit) },
+        enabled = isFormValid
+    )
+}
+
+@Composable
+private fun AuthToggleButton(
+    state: AuthState,
+    onIntent: (AuthIntent) -> Unit
+) {
+    AuthTextButton(
+        text = if (state.isLoginMode) {
+            stringResource(R.string.no_account_register)
+        } else {
+            stringResource(R.string.account_exists_entrance)
+        },
+        onClick = {
+            onIntent(AuthIntent.ToggleMode)
+            onIntent(AuthIntent.ResetError)
+        }
+    )
 }

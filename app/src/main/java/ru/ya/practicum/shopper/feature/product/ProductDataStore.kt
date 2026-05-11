@@ -14,7 +14,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class ProductDataStore(private val context: Context) {
 
     companion object {
-        private val PRODUCTS_SORT_BY_NAME_KEY = booleanPreferencesKey("products_sore_by_name")
+        private val PRODUCTS_SORT_BY_NAME_KEY = booleanPreferencesKey("products_sort_by_name")
     }
 
     val isProductsSortByName: Flow<Boolean> = context.dataStore.data

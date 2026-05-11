@@ -11,6 +11,7 @@ object Dimens {
     const val RESPONSE_403 = 403
     const val RESPONSE_409 = 409
     const val ROUNDED_CORNER_SHAPE_100_P = 100
+    const val PASSWORD_LENGTH = 6
 
     val dp4 = 4.dp
     val dp8 = 8.dp

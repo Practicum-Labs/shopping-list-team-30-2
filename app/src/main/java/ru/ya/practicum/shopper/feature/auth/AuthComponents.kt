@@ -40,7 +40,7 @@ fun AuthTitle(isLoginMode: Boolean) {
 fun EmailField(
     value: String,
     onValueChange: (String) -> Unit,
-    isError: Boolean,
+    error: String?,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -48,6 +48,7 @@ fun EmailField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.email)) },
+        isError = error != null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -55,8 +56,42 @@ fun EmailField(
         keyboardActions = KeyboardActions(
             onNext = { onNext() }
         ),
-        modifier = modifier.fillMaxWidth(),
-        isError = isError,
+        modifier = modifier
+            .fillMaxWidth(),
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedLabelColor = MaterialTheme.colorScheme.secondary,
+            cursorColor = MaterialTheme.colorScheme.primary,
+        )
+    )
+}
+
+@Composable
+fun PasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    error: String?,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.password)) },
+        isError = error != null,
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = { onSubmit() }
+        ),
+        modifier = modifier
+            .fillMaxWidth(),
+        singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.secondary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -67,17 +102,18 @@ fun EmailField(
 }
 
 @Composable
-fun PasswordField(
+fun ConfirmPasswordField(
     value: String,
     onValueChange: (String) -> Unit,
-    isError: Boolean,
+    error: String?,
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(stringResource(R.string.password)) },
+        label = { Text(stringResource(R.string.confirm_password)) },
+        isError = error != null,
         visualTransformation = PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
@@ -86,8 +122,9 @@ fun PasswordField(
         keyboardActions = KeyboardActions(
             onDone = { onSubmit() }
         ),
-        modifier = modifier.fillMaxWidth(),
-        isError = isError,
+        modifier = modifier
+            .fillMaxWidth(),
+        singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.secondary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -112,52 +149,41 @@ fun ErrorMessage(error: String?) {
 @Composable
 fun SubmitButton(
     isLoading: Boolean,
-    isLoginMode: Boolean,
-    onClick: () -> Unit
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        enabled = !isLoading,
+        modifier = modifier.fillMaxWidth(),
+        enabled = !isLoading && enabled,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     ) {
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.size(24.dp))
         } else {
-            Text(
-                text = if (isLoginMode) {
-                    stringResource(R.string.login)
-                } else {
-                    stringResource(R.string.sign_in)
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Text(text = text, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
 @Composable
-fun ToggleModeButton(
-    isLoginMode: Boolean,
-    onClick: () -> Unit
+fun AuthTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     TextButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
-        Text(
-            text = if (isLoginMode) {
-                stringResource(R.string.no_account_register)
-            } else {
-                stringResource(R.string.account_exists_entrance)
-            },
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }
 }

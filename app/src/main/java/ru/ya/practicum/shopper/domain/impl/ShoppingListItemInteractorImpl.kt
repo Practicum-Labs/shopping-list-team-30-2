@@ -11,8 +11,8 @@ import ru.ya.practicum.shopper.domain.repository.ShopperListRepository
 class ShoppingListItemInteractorImpl(
     private val shopperListRepository: ShopperListRepository,
     private val shopperItemsRepository: ShopperItemRepository
-) :
-    ShoppingListItemInteractor {
+) : ShoppingListItemInteractor {
+
     override suspend fun renameShoppingListItem(id: Int, newName: String) {
         shopperListRepository.rename(id, newName)
     }
