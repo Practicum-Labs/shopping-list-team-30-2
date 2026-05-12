@@ -1,6 +1,5 @@
 package ru.ya.practicum.shopper.core.navigation
 
-import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,9 +18,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
-import org.koin.compose.viewmodel.koinViewModel
-import ru.ya.practicum.shopper.feature.auth.AuthDataStore
+import org.koin.androidx.compose.koinViewModel
 import ru.ya.practicum.shopper.feature.auth.AuthScreen
 import ru.ya.practicum.shopper.feature.auth.RecoveryScreen
 import ru.ya.practicum.shopper.feature.auth.SignUpScreen
@@ -33,7 +32,6 @@ import ru.ya.practicum.shopper.feature.product.ProductScreen
 
 @Composable
 fun NavGraph(
-    context: Context,
     dataStore: OnboardDataStore,
     onThemeToggle: () -> Unit,
 ) {
@@ -41,17 +39,9 @@ fun NavGraph(
 
     var isLoading by remember { mutableStateOf(true) }
     var isOnboardCompleted by remember { mutableStateOf(false) }
-    var isAuthenticated by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         isOnboardCompleted = dataStore.isOnboardCompleted.first()
-
-        if (isOnboardCompleted) {
-            val authDataStore = AuthDataStore(context)
-            val token = authDataStore.getAccessToken()
-            isAuthenticated = token != null
-        }
-
         isLoading = false
     }
 
@@ -60,25 +50,12 @@ fun NavGraph(
         return
     }
 
-    val actualStartDestination = when {
-        !isOnboardCompleted -> Screen.Onboard.route
-        !isAuthenticated -> Screen.Auth.route
-        else -> Screen.Main.route
+    val startDestination = if (!isOnboardCompleted) {
+        Screen.Onboard.route
+    } else {
+        Screen.Auth.route
     }
 
-    AppNavHost(
-        navController = navController,
-        onThemeToggle = onThemeToggle,
-        startDestination = actualStartDestination
-    )
-}
-
-@Composable
-fun AppNavHost(
-    navController: NavHostController,
-    onThemeToggle: () -> Unit,
-    startDestination: String
-) {
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -114,9 +91,7 @@ private fun NavGraphBuilder.authScreen(
     composable(Screen.Auth.route) {
         AuthScreen(
             onAuthSuccess = {
-                navController.navigate(Screen.Main.route) {
-                    popUpTo(Screen.Auth.route) { inclusive = true }
-                }
+                navController.navigate(Screen.Main.route)
             },
             onNavigateToSignUp = {
                 navController.navigate(Screen.SignUp.route)
@@ -135,9 +110,7 @@ private fun NavGraphBuilder.signUpScreen(
         SignUpScreen(
             onBackClick = { navController.popBackStack() },
             onRegistrationSuccess = {
-                navController.navigate(Screen.Main.route) {
-                    popUpTo(Screen.Auth.route) { inclusive = true }
-                }
+                navController.navigate(Screen.Main.route)
             }
         )
     }
@@ -148,7 +121,7 @@ private fun NavGraphBuilder.recoveryScreen(
 ) {
     composable(Screen.Recovery.route) {
         RecoveryScreen(
-            onBackClick = { navController.popBackStack() },
+            onBackClick = { navController.popBackStack() }
         )
     }
 }
@@ -158,7 +131,11 @@ private fun NavGraphBuilder.mainScreen(
     onThemeToggle: () -> Unit
 ) {
     composable(Screen.Main.route) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val userId = currentUser?.uid
+
         MainScreen(
+            userId = userId ?: "",
             onNavigateToProduct = { listId, listName ->
                 navController.navigate(Screen.Product.passArguments(listId, listName))
             },
@@ -179,6 +156,7 @@ private fun NavGraphBuilder.productScreen(
     ) { backStackEntry ->
         val listId = backStackEntry.arguments?.getInt("listId") ?: 0
         val listName = backStackEntry.arguments?.getString("listName") ?: ""
+
         ProductScreen(
             listId = listId,
             listName = listName,

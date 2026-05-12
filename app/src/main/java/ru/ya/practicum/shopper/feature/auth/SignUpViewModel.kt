@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
 class SignUpViewModel(
     private val repository: AuthRepository
@@ -34,8 +33,8 @@ class SignUpViewModel(
 
     private fun updateEmail(email: String) {
         val emailError = AuthValidation.validateEmail(email)
-        _state.update { currentState ->
-            currentState.copy(
+        _state.update {
+            it.copy(
                 email = email,
                 emailError = emailError,
                 generalError = null
@@ -45,17 +44,15 @@ class SignUpViewModel(
 
     private fun updatePassword(password: String) {
         val passwordError = AuthValidation.validatePassword(password)
-        _state.update { currentState ->
-            currentState.copy(
+        _state.update {
+            it.copy(
                 password = password,
                 passwordError = passwordError,
                 generalError = null
             )
         }
-
-        val currentState = _state.value
-        if (currentState.confirmPassword.isNotEmpty()) {
-            updateConfirmPassword(currentState.confirmPassword)
+        if (_state.value.confirmPassword.isNotEmpty()) {
+            updateConfirmPassword(_state.value.confirmPassword)
         }
     }
 
@@ -66,8 +63,8 @@ class SignUpViewModel(
         } else {
             null
         }
-        _state.update { currentState ->
-            currentState.copy(
+        _state.update {
+            it.copy(
                 confirmPassword = confirmPassword,
                 confirmPasswordError = confirmError,
                 generalError = null
@@ -86,66 +83,55 @@ class SignUpViewModel(
         }
     }
 
-    private fun submit() {
-        val currentState = _state.value
-
-        val emailError = AuthValidation.validateEmail(currentState.email)
-        val passwordError = AuthValidation.validatePassword(currentState.password)
-        val confirmError = if (currentState.password != currentState.confirmPassword) {
+    private fun isValid(): Boolean {
+        val state = _state.value
+        val emailError = AuthValidation.validateEmail(state.email)
+        val passwordError = AuthValidation.validatePassword(state.password)
+        val confirmError = if (state.password != state.confirmPassword) {
             "Пароли не совпадают"
         } else {
             null
         }
 
-        if (emailError != null || passwordError != null || confirmError != null) {
-            _state.update {
-                it.copy(
-                    emailError = emailError,
-                    passwordError = passwordError,
-                    confirmPasswordError = confirmError,
-                    generalError = null
-                )
-            }
-            return
+        _state.update {
+            it.copy(
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmError
+            )
         }
+
+        return emailError == null && passwordError == null && confirmError == null
+    }
+
+    private fun submit() {
+        if (!isValid()) return
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, generalError = null) }
 
-            val result = repository.register(currentState.email, currentState.password)
+            val result = repository.register(_state.value.email, _state.value.password)
 
             result.fold(
-                onSuccess = { authResponse ->
-                    repository.saveTokens(authResponse)
+                onSuccess = {
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
                     sendEffect(SignUpEffect.RegistrationSuccess)
                 },
-                onFailure = { error ->
-                    handleError(error)
+                onFailure = { exception ->
+                    val message = when (exception) {
+                        is AuthException -> exception.getUserMessage()
+                        else -> "Ошибка: ${exception.message}"
+                    }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            generalError = message
+                        )
+                    }
+                    sendEffect(SignUpEffect.ShowError(message))
                 }
             )
         }
-    }
-
-    private fun handleError(error: Throwable) {
-        val errorMessage = when (error) {
-            is retrofit2.HttpException -> {
-                when (error.code()) {
-                    Dimens.RESPONSE_400 -> "Некорректный email или пароль менее 7 символов"
-                    Dimens.RESPONSE_409 -> "Пользователь с таким email уже существует"
-                    else -> "Ошибка сервера: ${error.code()}"
-                }
-            }
-
-            else -> "Ошибка сети: ${error.message}"
-        }
-        _state.update {
-            it.copy(
-                isLoading = false,
-                generalError = errorMessage
-            )
-        }
-        sendEffect(SignUpEffect.ShowError(errorMessage))
     }
 
     private fun sendEffect(effect: SignUpEffect) {
@@ -153,4 +139,31 @@ class SignUpViewModel(
             _effect.send(effect)
         }
     }
+}
+
+data class SignUpState(
+    val email: String = "",
+    val password: String = "",
+    val confirmPassword: String = "",
+    val isLoading: Boolean = false,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val confirmPasswordError: String? = null,
+    val generalError: String? = null,
+    val isSuccess: Boolean = false
+)
+
+sealed class SignUpIntent {
+    data class UpdateEmail(val email: String) : SignUpIntent()
+    data class UpdatePassword(val password: String) : SignUpIntent()
+    data class UpdateConfirmPassword(val password: String) : SignUpIntent()
+    data object Submit : SignUpIntent()
+    data object ResetErrors : SignUpIntent()
+    data object NavigateBack : SignUpIntent()
+}
+
+sealed class SignUpEffect {
+    data class ShowError(val message: String) : SignUpEffect()
+    data object NavigateToAuth : SignUpEffect()
+    data object RegistrationSuccess : SignUpEffect()
 }

@@ -60,7 +60,6 @@ class MainActivity : ComponentActivity() {
         if (isReady) {
             Theme(darkTheme = isDarkTheme) {
                 NavGraph(
-                    context = applicationContext,
                     dataStore = onboardDataStore,
                     onThemeToggle = {
                         scope.launch {
