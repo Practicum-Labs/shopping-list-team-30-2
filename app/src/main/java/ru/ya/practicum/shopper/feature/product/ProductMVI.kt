@@ -37,5 +37,4 @@ sealed class ProductResult {
 
 sealed class ProductEffect {
     data class ShowError(val message: String) : ProductEffect()
-    data class NavigateBack(val productId: Int?) : ProductEffect()
 }

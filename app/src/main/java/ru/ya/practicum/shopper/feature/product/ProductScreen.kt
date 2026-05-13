@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import org.koin.androidx.compose.koinViewModel
 import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.Product
@@ -62,8 +63,6 @@ fun ProductScreen(
                 is ProductEffect.ShowError -> {
                     snackbarHostState.showSnackbar(effect.message)
                 }
-
-                is ProductEffect.NavigateBack -> {}
             }
         }
     }
@@ -134,17 +133,23 @@ fun ProductScreen(
 
     if (showDialogDeleteAll) {
         ConfirmDeleteDialog(
-            R.string.deleteAllConfirm,
+            stringResource(R.string.deleteAllConfirm),
             { showDialogDeleteAll = false },
-            { viewModel.onIntent(ProductIntent.DeleteAllProducts) }
+            {
+                viewModel.onIntent(ProductIntent.DeleteAllProducts)
+                showDialogDeleteAll = false
+            }
         )
     }
 
     if (showDialogClearBought) {
         ConfirmDeleteDialog(
-            R.string.clearBoughtConfirm,
+            stringResource(R.string.clearBoughtConfirm),
             { showDialogClearBought = false },
-            { viewModel.onIntent(ProductIntent.ClearBoughtProducts) }
+            {
+                viewModel.onIntent(ProductIntent.ClearBoughtProducts)
+                showDialogClearBought = false
+            }
         )
     }
 }

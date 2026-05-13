@@ -16,18 +16,14 @@ object AuthValidation {
     fun validatePassword(password: String): String? {
         return when {
             password.isBlank() -> "Пароль не может быть пустым"
-            password.length < Dimens.PASSWORD_LENGTH -> "Пароль должен быть не менее ${Dimens.PASSWORD_LENGTH} символов"
+            password.length < Dimens.PASSWORD_LENGTH -> "Пароль должен быть не менее 6 символов"
             else -> null
         }
     }
 
-    fun isEmailValid(email: String): Boolean {
-        return validateEmail(email) == null
-    }
+    fun isEmailValid(email: String): Boolean = validateEmail(email) == null
 
-    fun isPasswordValid(password: String): Boolean {
-        return validatePassword(password) == null
-    }
+    fun isPasswordValid(password: String): Boolean = validatePassword(password) == null
 }
 
 data class AuthValidationResult(
@@ -45,7 +41,7 @@ fun validateAuthState(state: AuthState): AuthValidationResult {
 
     val passwordError =
         if (state.password.isNotBlank() && !AuthValidation.isPasswordValid(state.password)) {
-            "Пароль должен быть не менее ${Dimens.PASSWORD_LENGTH} символов"
+            "Пароль должен быть не менее 6 символов"
         } else {
             null
         }
