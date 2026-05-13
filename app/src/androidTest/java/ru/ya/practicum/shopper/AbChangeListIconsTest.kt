@@ -8,7 +8,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,10 +32,21 @@ class AbChangeListIconsTest {
         runBlocking {
             val onboardDataStore = OnboardDataStore(context)
             onboardDataStore.setOnboardCompleted(true)
-            onboardDataStore.getOrCreateUserId()
 
             val authDataStore = AuthDataStore(context)
-            authDataStore.clearTokens()
+            authDataStore.clearUserId()
+
+            FirebaseAuth.getInstance().signOut()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        runBlocking {
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val authDataStore = AuthDataStore(context)
+            authDataStore.clearUserId()
+            FirebaseAuth.getInstance().signOut()
         }
     }
 
@@ -43,7 +56,6 @@ class AbChangeListIconsTest {
 
         composeTestRule.setContent {
             ru.ya.practicum.shopper.core.navigation.NavGraph(
-                context = context,
                 dataStore = OnboardDataStore(context),
                 onThemeToggle = {}
             )
@@ -52,7 +64,6 @@ class AbChangeListIconsTest {
         composeTestRule.waitForIdle()
         Thread.sleep(2000)
 
-        // Пропускаем онбординг
         try {
             composeTestRule.onNodeWithText("Нажмите в любом месте", ignoreCase = true)
                 .performClick()
@@ -61,27 +72,15 @@ class AbChangeListIconsTest {
             println("Onboarding not shown")
         }
 
-        // Авторизация
-        try {
-            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
-                .assertIsDisplayed()
-                .performTextInput(testEmail)
-
-            composeTestRule.onNodeWithText("Пароль", ignoreCase = true)
-                .performTextInput(testPassword)
-
-            composeTestRule.onNodeWithText("Войти", ignoreCase = true)
-                .performClick()
-
-            Thread.sleep(5000)
-            composeTestRule.waitForIdle()
-
-        } catch (e: AssertionError) {
-            println("Auth screen not found or already authenticated: ${e.message}")
-        }
+        performLogin()
 
         Thread.sleep(2000)
         composeTestRule.waitForIdle()
+
+        createListIfNotExists("Лист покупок Один")
+        createListIfNotExists("Лист покупок Два")
+        createListIfNotExists("Лист покупок Три")
+        createListIfNotExists("Лист покупок Четыре")
 
         changeIconForList("Лист покупок Один", 1, R.drawable.ic_car)
         changeIconForList("Лист покупок Два", 2, R.drawable.ic_pet)
@@ -91,6 +90,58 @@ class AbChangeListIconsTest {
         composeTestRule.onNodeWithText("Лист покупок Один").assertIsDisplayed()
         composeTestRule.onNodeWithText("Лист покупок Два").assertIsDisplayed()
         composeTestRule.onNodeWithText("Лист покупок Четыре").assertIsDisplayed()
+    }
+
+    private fun performLogin() {
+        try {
+            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
+                .assertIsDisplayed()
+
+            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
+                .performTextInput(testEmail)
+
+            composeTestRule.onNodeWithText("Пароль", ignoreCase = true)
+                .performTextInput(testPassword)
+
+            composeTestRule.onNodeWithText("Войти", ignoreCase = true)
+                .performClick()
+
+            Thread.sleep(3000)
+            composeTestRule.waitForIdle()
+
+        } catch (e: AssertionError) {
+            println("Auth screen not shown, already on main screen: ${e.message}")
+        }
+    }
+
+    private fun createListIfNotExists(listName: String) {
+        try {
+            composeTestRule.onNodeWithText(listName).assertIsDisplayed()
+            println("List '$listName' already exists")
+        } catch (e: AssertionError) {
+            println("Creating list: $listName")
+            createList(listName)
+        }
+    }
+
+    private fun createList(listName: String) {
+        composeTestRule.onNodeWithTag("fab_add_list")
+            .assertIsDisplayed()
+            .performClick()
+
+        composeTestRule.waitForIdle()
+        Thread.sleep(500)
+
+        composeTestRule.onNodeWithText("Название списка")
+            .assertIsDisplayed()
+            .performTextInput(listName)
+
+        composeTestRule.onNodeWithText("Создать")
+            .assertIsDisplayed()
+            .performClick()
+
+        composeTestRule.waitForIdle()
+        Thread.sleep(1000)
     }
 
     private fun changeIconForList(listName: String, listId: Int, newIconResId: Int) {

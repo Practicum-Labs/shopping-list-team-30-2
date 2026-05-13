@@ -26,6 +26,7 @@ private fun MainScreenPreviewLight() {
         darkTheme = false
     ) {
         MainScreen(
+            userId = "test1",
             onNavigateToProduct = { _, _ -> },
             onThemeToggle = {}
         )
@@ -39,6 +40,7 @@ private fun MainScreenPreviewDark() {
         darkTheme = true
     ) {
         MainScreen(
+            userId = "test1",
             onNavigateToProduct = { _, _ -> },
             onThemeToggle = {}
         )

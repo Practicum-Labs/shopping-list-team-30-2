@@ -9,15 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
 data class AuthState(
     val email: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isLoginMode: Boolean = true,
-    val isAuthenticated: Boolean = false
+    val isLoginMode: Boolean = true
 )
 
 sealed class AuthIntent {
@@ -49,113 +47,94 @@ class AuthViewModel(
 
     fun handleIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.UpdateEmail -> updateField(intent.email, isEmail = true)
-            is AuthIntent.UpdatePassword -> updateField(intent.password, isEmail = false)
+            is AuthIntent.UpdateEmail -> updateEmail(intent.email)
+            is AuthIntent.UpdatePassword -> updatePassword(intent.password)
             AuthIntent.Submit -> submit()
             AuthIntent.ResetError -> resetError()
             AuthIntent.NavigateToSignUp -> sendEffect(AuthEffect.NavigateToSignUp)
             AuthIntent.NavigateToRecovery -> sendEffect(AuthEffect.NavigateToRecovery)
-            AuthIntent.ToggleMode -> {}
+            AuthIntent.ToggleMode -> toggleMode()
         }
     }
 
-    private fun updateField(value: String, isEmail: Boolean) {
-        _state.update {
-            if (isEmail) {
-                it.copy(email = value, error = null, isLoading = false)
-            } else {
-                it.copy(password = value, error = null, isLoading = false)
-            }
-        }
+    private fun updateEmail(email: String) {
+        _state.update { it.copy(email = email, error = null) }
+    }
+
+    private fun updatePassword(password: String) {
+        _state.update { it.copy(password = password, error = null) }
     }
 
     private fun resetError() {
         _state.update { it.copy(error = null, isLoading = false) }
     }
 
-    private fun updateState(
-        isLoading: Boolean? = null,
-        error: String? = null,
-        isAuthenticated: Boolean? = null
-    ) {
-        _state.update { state ->
-            state.copy(
-                isLoading = isLoading ?: state.isLoading,
-                error = error ?: state.error,
-                isAuthenticated = isAuthenticated ?: state.isAuthenticated
+    private fun toggleMode() {
+        _state.update {
+            it.copy(
+                isLoginMode = !it.isLoginMode,
+                error = null,
+                email = "",
+                password = ""
             )
         }
     }
 
-    private fun isValid(state: AuthState): Boolean {
+    private fun isValid(): Boolean {
+        val state = _state.value
         return when {
             state.email.isBlank() -> {
-                updateState(error = "Введите email", isLoading = false)
+                setError("Введите email")
                 false
             }
-
             !AuthValidation.isEmailValid(state.email) -> {
-                updateState(error = "Введите корректный email", isLoading = false)
+                setError("Введите корректный email")
                 false
             }
-
             state.password.isBlank() -> {
-                updateState(error = "Введите пароль", isLoading = false)
+                setError("Введите пароль")
                 false
             }
-
             !AuthValidation.isPasswordValid(state.password) -> {
-                updateState(error = "Пароль должен быть не менее 6 символов", isLoading = false)
+                setError("Пароль должен быть не менее 6 символов")
                 false
             }
-
-            state.isLoading -> false
             else -> true
         }
     }
 
-    private fun submit() {
-        val currentState = _state.value
+    private fun setError(message: String) {
+        _state.update { it.copy(error = message, isLoading = false) }
+        sendEffect(AuthEffect.ShowError(message))
+    }
 
-        if (!isValid(currentState)) return
+    private fun submit() {
+        if (!isValid()) return
 
         viewModelScope.launch {
-            updateState(isLoading = true, error = null)
+            _state.update { it.copy(isLoading = true, error = null) }
 
-            val result = if (currentState.isLoginMode) {
-                repository.login(currentState.email, currentState.password)
+            val result = if (_state.value.isLoginMode) {
+                repository.login(_state.value.email, _state.value.password)
             } else {
-                repository.register(currentState.email, currentState.password)
+                repository.register(_state.value.email, _state.value.password)
             }
 
             result.fold(
-                onSuccess = { authResponse ->
-                    repository.saveTokens(authResponse)
-                    updateState(isLoading = false, isAuthenticated = true, error = null)
+                onSuccess = {
+                    _state.update { it.copy(isLoading = false, error = null) }
                     sendEffect(AuthEffect.NavigateToMain)
                 },
-                onFailure = { error ->
-                    handleError(error)
+                onFailure = { exception ->
+                    val message = when (exception) {
+                        is AuthException -> exception.getUserMessage()
+                        else -> "Ошибка: ${exception.message}"
+                    }
+                    _state.update { it.copy(isLoading = false, error = message) }
+                    sendEffect(AuthEffect.ShowError(message))
                 }
             )
         }
-    }
-
-    private fun handleError(error: Throwable) {
-        val errorMessage = when (error) {
-            is retrofit2.HttpException -> {
-                when (error.code()) {
-                    Dimens.RESPONSE_400 -> "Неверный формат данных"
-                    Dimens.RESPONSE_401 -> "Неверный email или пароль"
-                    Dimens.RESPONSE_409 -> "Пользователь уже существует"
-                    else -> "Ошибка сервера: ${error.code()}"
-                }
-            }
-
-            else -> "Ошибка сети: ${error.message}"
-        }
-        updateState(error = errorMessage, isLoading = false)
-        sendEffect(AuthEffect.ShowError(errorMessage))
     }
 
     private fun sendEffect(effect: AuthEffect) {

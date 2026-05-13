@@ -8,7 +8,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -28,12 +30,25 @@ class AaMainScreenCreateListsTest {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
 
         runBlocking {
+            // Очищаем данные перед тестом
             val onboardDataStore = OnboardDataStore(context)
             onboardDataStore.setOnboardCompleted(true)
-            onboardDataStore.getOrCreateUserId()
 
             val authDataStore = AuthDataStore(context)
-            authDataStore.clearTokens()
+            authDataStore.clearUserId()
+
+            // Очищаем Firebase сессию
+            FirebaseAuth.getInstance().signOut()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        runBlocking {
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val authDataStore = AuthDataStore(context)
+            authDataStore.clearUserId()
+            FirebaseAuth.getInstance().signOut()
         }
     }
 
@@ -43,7 +58,6 @@ class AaMainScreenCreateListsTest {
 
         composeTestRule.setContent {
             ru.ya.practicum.shopper.core.navigation.NavGraph(
-                context = context,
                 dataStore = OnboardDataStore(context),
                 onThemeToggle = {}
             )
@@ -60,26 +74,11 @@ class AaMainScreenCreateListsTest {
             println("Onboarding not shown")
         }
 
-        try {
-            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
-                .assertIsDisplayed()
-                .performTextInput(testEmail)
-
-            composeTestRule.onNodeWithText("Пароль", ignoreCase = true)
-                .performTextInput(testPassword)
-
-            composeTestRule.onNodeWithText("Войти", ignoreCase = true)
-                .performClick()
-
-            Thread.sleep(5000)
-            composeTestRule.waitForIdle()
-
-        } catch (e: AssertionError) {
-            println("Auth screen not found or already authenticated: ${e.message}")
-        }
+        performLogin()
 
         Thread.sleep(2000)
         composeTestRule.waitForIdle()
+
         createList("Лист покупок Один")
         createList("Лист покупок Два")
         createList("Лист покупок Три")
@@ -93,6 +92,28 @@ class AaMainScreenCreateListsTest {
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Лист покупок Четыре")
             .assertIsDisplayed()
+    }
+
+    private fun performLogin() {
+        try {
+            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
+                .assertIsDisplayed()
+
+            composeTestRule.onNodeWithText("Электронная почта", ignoreCase = true)
+                .performTextInput(testEmail)
+
+            composeTestRule.onNodeWithText("Пароль", ignoreCase = true)
+                .performTextInput(testPassword)
+
+            composeTestRule.onNodeWithText("Войти", ignoreCase = true)
+                .performClick()
+
+            Thread.sleep(3000)
+            composeTestRule.waitForIdle()
+
+        } catch (e: AssertionError) {
+            println("Auth screen not shown, already on main screen: ${e.message}")
+        }
     }
 
     private fun createList(listName: String) {

@@ -7,7 +7,6 @@ import ru.ya.practicum.shopper.di.authModule
 import ru.ya.practicum.shopper.di.coreModule
 import ru.ya.practicum.shopper.di.dataModule
 import ru.ya.practicum.shopper.di.domainModule
-import ru.ya.practicum.shopper.di.networkModule
 
 class App : Application() {
 
@@ -20,8 +19,7 @@ class App : Application() {
                 coreModule,
                 dataModule,
                 domainModule,
-                authModule,
-                networkModule
+                authModule
             )
         }
     }

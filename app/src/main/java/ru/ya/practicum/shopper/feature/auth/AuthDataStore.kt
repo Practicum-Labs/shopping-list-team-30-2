@@ -14,40 +14,29 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class AuthDataStore(private val context: Context) {
     companion object {
-        private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
-        private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
         private val USER_ID_KEY = stringPreferencesKey("user_id")
     }
 
-    val accessTokenFlow: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[ACCESS_TOKEN_KEY] }
+    val userIdFlow: Flow<String?> = context.dataStore.data
+        .map { preferences -> preferences[USER_ID_KEY] }
 
-    suspend fun saveTokens(accessToken: String, refreshToken: String, userId: Long) {
+    suspend fun saveUserId(userId: String) {
         context.dataStore.edit { preferences ->
-            preferences[ACCESS_TOKEN_KEY] = accessToken
-            preferences[REFRESH_TOKEN_KEY] = refreshToken
-            preferences[USER_ID_KEY] = userId.toString()
+            preferences[USER_ID_KEY] = userId
         }
     }
 
-    suspend fun clearTokens() {
-        context.dataStore.edit { it.clear() }
+    suspend fun clearUserId() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(USER_ID_KEY)
+        }
     }
 
-    suspend fun getAccessToken(): String? =
-        context.dataStore.data.map { it[ACCESS_TOKEN_KEY] }.first()
-
-    suspend fun getRefreshToken(): String? =
-        context.dataStore.data.map { it[REFRESH_TOKEN_KEY] }.first()
-
-    suspend fun getUserId(): Long? {
-        return context.dataStore.data
-            .map { preferences -> preferences[USER_ID_KEY]?.toLongOrNull() }
-            .first()
+    suspend fun getUserId(): String? {
+        return context.dataStore.data.map { it[USER_ID_KEY] }.first()
     }
 
-    suspend fun hasValidTokens(): Boolean {
-        val token = getAccessToken()
-        return !token.isNullOrBlank()
+    suspend fun isAuthenticated(): Boolean {
+        return getUserId() != null
     }
 }
