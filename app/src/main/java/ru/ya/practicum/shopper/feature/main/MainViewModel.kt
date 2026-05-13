@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.R
 import ru.ya.practicum.shopper.core.model.ShoppingList
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 import ru.ya.practicum.shopper.domain.api.ShoppingListItemInteractor
 import ru.ya.practicum.shopper.domain.usecase.list.CreateListParams
 import ru.ya.practicum.shopper.domain.usecase.list.DeleteAllListsParams
@@ -101,7 +103,8 @@ sealed class ListEvents {
 class MainViewModel(
     private val userId: String,
     private val useCases: MainUseCases,
-    private val shoppingListItemInteractor: ShoppingListItemInteractor
+    private val shoppingListItemInteractor: ShoppingListItemInteractor,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
@@ -163,7 +166,7 @@ class MainViewModel(
 
     private fun copyList(list: ShoppingList, newName: String) {
         viewModelScope.launch {
-            val coreShoppingList = ru.ya.practicum.shopper.core.model.ShoppingList(
+            val coreShoppingList = ShoppingList(
                 id = list.id,
                 name = list.name,
                 iconResId = list.iconResId,
@@ -276,27 +279,27 @@ class MainViewModel(
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListsLoaded(uiLists)
         } catch (e: IOException) {
-            MainResult.Error("Ошибка сети: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_network, e.message ?: ""))
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_state, e.message ?: ""))
         }
     }
 
     private suspend fun createList(name: String, iconId: Int): MainResult {
         return try {
             if (name.isBlank()) {
-                return MainResult.Error("Название не может быть пустым")
+                return MainResult.Error(resourceProvider.getString(R.string.error_empty_list_name))
             }
             useCases.createList(CreateListParams(name, iconId, userId))
             val shopperLists = useCases.getLists(GetListsParams(userId)).first()
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListCreated(uiLists)
         } catch (e: SQLException) {
-            MainResult.Error("Ошибка базы данных: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_database, e.message ?: ""))
         } catch (e: IOException) {
-            MainResult.Error("Ошибка ввода-вывода: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_io, e.message ?: ""))
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_state, e.message ?: ""))
         }
     }
 
@@ -307,11 +310,21 @@ class MainViewModel(
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListDeleted(uiLists)
         } catch (e: SQLException) {
-            MainResult.Error("Ошибка базы данных при удалении: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_database_delete,
+                    e.message ?: ""
+                )
+            )
         } catch (e: IOException) {
-            MainResult.Error("Ошибка ввода-вывода при удалении: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_io_delete, e.message ?: ""))
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния при удалении: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_state_delete,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -322,11 +335,21 @@ class MainViewModel(
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListNameUpdated(uiLists)
         } catch (e: SQLException) {
-            MainResult.Error("Ошибка базы данных при обновлении: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_database_update,
+                    e.message ?: ""
+                )
+            )
         } catch (e: IOException) {
-            MainResult.Error("Ошибка ввода-вывода при обновлении: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_io_update, e.message ?: ""))
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния при обновлении: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_state_update,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -337,11 +360,21 @@ class MainViewModel(
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListIconUpdated(uiLists)
         } catch (e: SQLException) {
-            MainResult.Error("Ошибка базы данных: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_database_general,
+                    e.message ?: ""
+                )
+            )
         } catch (e: IOException) {
-            MainResult.Error("Ошибка ввода-вывода: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_io_general, e.message ?: ""))
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_state_general,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -353,20 +386,30 @@ class MainViewModel(
             val uiLists = useCases.mapLists(MapListsParams(shopperLists))
             MainResult.ListsDeleted(uiLists)
         } catch (e: SQLException) {
-            MainResult.Error("Ошибка при удалении: ${e.message}")
+            MainResult.Error(resourceProvider.getString(R.string.error_delete_all, e.message ?: ""))
         } catch (e: IOException) {
-            MainResult.Error("Ошибка ввода-вывода: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_io_delete_all,
+                    e.message ?: ""
+                )
+            )
         } catch (e: IllegalStateException) {
-            MainResult.Error("Ошибка состояния: ${e.message}")
+            MainResult.Error(
+                resourceProvider.getString(
+                    R.string.error_state_delete_all,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
-    private suspend fun handleShowAddDialog(): MainResult {
+    private fun handleShowAddDialog(): MainResult {
         _state.update { it.copy(showAddDialog = true, showIconPicker = false, error = null) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleHideAddDialog(): MainResult {
+    private fun handleHideAddDialog(): MainResult {
         _state.update {
             it.copy(
                 showAddDialog = false,
@@ -378,32 +421,32 @@ class MainViewModel(
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleShowIconPicker(): MainResult {
+    private fun handleShowIconPicker(): MainResult {
         _state.update { it.copy(showIconPicker = true) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleHideIconPicker(): MainResult {
+    private fun handleHideIconPicker(): MainResult {
         _state.update { it.copy(showIconPicker = false, editingListId = null) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleSelectIcon(iconId: Int): MainResult {
+    private fun handleSelectIcon(iconId: Int): MainResult {
         _state.update { it.copy(selectedIconId = iconId, showIconPicker = false) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleUpdateNewListName(name: String): MainResult {
+    private fun handleUpdateNewListName(name: String): MainResult {
         _state.update { it.copy(newListName = name) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleShowIconPickerForList(listId: Int): MainResult {
+    private fun handleShowIconPickerForList(listId: Int): MainResult {
         _state.update { it.copy(showIconPicker = true, editingListId = listId) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleToggleSearch(): MainResult {
+    private fun handleToggleSearch(): MainResult {
         _state.update {
             it.copy(isSearchActive = !it.isSearchActive, searchQuery = "")
         }
@@ -411,34 +454,34 @@ class MainViewModel(
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleUpdateSearchQuery(query: String): MainResult {
+    private fun handleUpdateSearchQuery(query: String): MainResult {
         _state.update { it.copy(searchInput = query) }
         _searchQueryInput.value = query
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleCloseSearch(): MainResult {
+    private fun handleCloseSearch(): MainResult {
         _state.update { it.copy(isSearchActive = false, searchQuery = "") }
         _searchQueryInput.value = ""
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handlePerformSearch(): MainResult {
+    private fun handlePerformSearch(): MainResult {
         _state.update { it.copy(searchQuery = it.searchInput) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleShowDeleteAllDialog(): MainResult {
+    private fun handleShowDeleteAllDialog(): MainResult {
         _state.update { it.copy(showDeleteAllDialog = true) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun handleHideDeleteAllDialog(): MainResult {
+    private fun handleHideDeleteAllDialog(): MainResult {
         _state.update { it.copy(showDeleteAllDialog = false) }
         return MainResult.ListsLoaded(_state.value.lists)
     }
 
-    private suspend fun reduceListsLoaded(result: MainResult.ListsLoaded) {
+    private fun reduceListsLoaded(result: MainResult.ListsLoaded) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -448,7 +491,7 @@ class MainViewModel(
         }
     }
 
-    private suspend fun reduceListCreated(result: MainResult.ListCreated) {
+    private fun reduceListCreated(result: MainResult.ListCreated) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -462,7 +505,7 @@ class MainViewModel(
         }
     }
 
-    private suspend fun reduceListDeleted(result: MainResult.ListDeleted) {
+    private fun reduceListDeleted(result: MainResult.ListDeleted) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -472,7 +515,7 @@ class MainViewModel(
         }
     }
 
-    private suspend fun reduceListNameUpdated(result: MainResult.ListNameUpdated) {
+    private fun reduceListNameUpdated(result: MainResult.ListNameUpdated) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -482,7 +525,7 @@ class MainViewModel(
         }
     }
 
-    private suspend fun reduceListIconUpdated(result: MainResult.ListIconUpdated) {
+    private fun reduceListIconUpdated(result: MainResult.ListIconUpdated) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -494,7 +537,7 @@ class MainViewModel(
         }
     }
 
-    private suspend fun reduceListsDeleted(result: MainResult.ListsDeleted) {
+    private fun reduceListsDeleted(result: MainResult.ListsDeleted) {
         _state.update {
             it.copy(
                 isLoading = false,

@@ -153,7 +153,7 @@ private fun SuccessDialog(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = {
             Text(
-                text = "Проверьте почту",
+                text = stringResource(R.string.recovery_success_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -161,7 +161,7 @@ private fun SuccessDialog(
         text = {
             Column {
                 Text(
-                    text = "Письмо для сброса пароля отправлено на",
+                    text = stringResource(R.string.recovery_success_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -172,7 +172,7 @@ private fun SuccessDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Перейдите по ссылке в письме, чтобы создать новый пароль.",
+                    text = stringResource(R.string.recovery_success_instruction),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -185,7 +185,7 @@ private fun SuccessDialog(
                     contentColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
-                Text("Понятно")
+                Text(stringResource(R.string.recovery_success_button))
             }
         }
     )
@@ -238,7 +238,7 @@ private fun RecoveryHeader() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Введите email, указанный при регистрации. Мы отправим на него ссылку для сброса пароля.",
+            text = stringResource(R.string.recovery_instruction),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth()
@@ -253,7 +253,7 @@ private fun RecoveryEmailField(
     emailFocusRequester: FocusRequester
 ) {
     val emailError = if (state.email.isNotBlank() && !AuthValidation.isEmailValid(state.email)) {
-        "Введите корректный email"
+        stringResource(R.string.error_email_invalid)
     } else {
         state.emailError
     }

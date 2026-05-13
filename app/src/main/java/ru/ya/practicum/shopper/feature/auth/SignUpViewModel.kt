@@ -9,9 +9,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 
 class SignUpViewModel(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SignUpState())
@@ -32,7 +35,9 @@ class SignUpViewModel(
     }
 
     private fun updateEmail(email: String) {
-        val emailError = AuthValidation.validateEmail(email)
+        val validationError = AuthValidation.validateEmail(email)
+        val emailError = validationError?.getMessage(resourceProvider)
+
         _state.update {
             it.copy(
                 email = email,
@@ -43,7 +48,9 @@ class SignUpViewModel(
     }
 
     private fun updatePassword(password: String) {
-        val passwordError = AuthValidation.validatePassword(password)
+        val validationError = AuthValidation.validatePassword(password)
+        val passwordError = validationError?.getMessage(resourceProvider)
+
         _state.update {
             it.copy(
                 password = password,
@@ -59,7 +66,7 @@ class SignUpViewModel(
     private fun updateConfirmPassword(confirmPassword: String) {
         val currentPassword = _state.value.password
         val confirmError = if (confirmPassword != currentPassword) {
-            "Пароли не совпадают"
+            resourceProvider.getString(R.string.error_passwords_mismatch)
         } else {
             null
         }
@@ -85,23 +92,23 @@ class SignUpViewModel(
 
     private fun isValid(): Boolean {
         val state = _state.value
-        val emailError = AuthValidation.validateEmail(state.email)
-        val passwordError = AuthValidation.validatePassword(state.password)
+        val emailValidationError = AuthValidation.validateEmail(state.email)
+        val passwordValidationError = AuthValidation.validatePassword(state.password)
         val confirmError = if (state.password != state.confirmPassword) {
-            "Пароли не совпадают"
+            resourceProvider.getString(R.string.error_passwords_mismatch)
         } else {
             null
         }
 
         _state.update {
             it.copy(
-                emailError = emailError,
-                passwordError = passwordError,
+                emailError = emailValidationError?.getMessage(resourceProvider),
+                passwordError = passwordValidationError?.getMessage(resourceProvider),
                 confirmPasswordError = confirmError
             )
         }
 
-        return emailError == null && passwordError == null && confirmError == null
+        return emailValidationError == null && passwordValidationError == null && confirmError == null
     }
 
     private fun submit() {
@@ -119,8 +126,11 @@ class SignUpViewModel(
                 },
                 onFailure = { exception ->
                     val message = when (exception) {
-                        is AuthException -> exception.getUserMessage()
-                        else -> "Ошибка: ${exception.message}"
+                        is AuthException -> exception.getUserMessage(resourceProvider)
+                        else -> resourceProvider.getString(
+                            R.string.error_unknown,
+                            exception.message ?: ""
+                        )
                     }
                     _state.update {
                         it.copy(
@@ -128,7 +138,6 @@ class SignUpViewModel(
                             generalError = message
                         )
                     }
-                    sendEffect(SignUpEffect.ShowError(message))
                 }
             )
         }

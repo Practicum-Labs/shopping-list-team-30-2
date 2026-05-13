@@ -83,7 +83,7 @@ private fun AuthEmailSection(
     passwordFocusRequester: FocusRequester
 ) {
     val emailError = if (state.email.isNotBlank() && !AuthValidation.isEmailValid(state.email)) {
-        "Введите корректный email"
+        stringResource(R.string.error_email_invalid)
     } else {
         null
     }
@@ -107,12 +107,11 @@ private fun AuthPasswordSection(
     onIntent: (AuthIntent) -> Unit,
     passwordFocusRequester: FocusRequester
 ) {
-    val passwordError =
-        if (state.password.isNotBlank() && !AuthValidation.isPasswordValid(state.password)) {
-            "Пароль должен быть не менее 6 символов"
-        } else {
-            null
-        }
+    val passwordError = if (state.password.isNotBlank() && !AuthValidation.isPasswordValid(state.password)) {
+        stringResource(R.string.error_password_too_short)
+    } else {
+        null
+    }
 
     PasswordField(
         value = state.password,

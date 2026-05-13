@@ -54,7 +54,11 @@ data class ProductBottomSheetConfig(
 @Composable
 fun ProductBottomSheet(config: ProductBottomSheetConfig) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
-    val currentSortString = if (config.state.sortingByName) "по алфавиту" else "пользовательская"
+    val currentSortString = if (config.state.sortingByName) {
+        stringResource(R.string.sort_by_alphabet)
+    } else {
+        stringResource(R.string.sort_by_custom)
+    }
 
     ModalBottomSheet(
         onDismissRequest = config.onDismissRequest,
