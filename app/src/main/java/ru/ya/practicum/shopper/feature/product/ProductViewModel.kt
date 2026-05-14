@@ -15,8 +15,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ChangeProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
@@ -32,6 +34,8 @@ import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingParams
 import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.UpdateProductUseCase
+import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 
 data class ProductDependencies(
     val defaultUnit: String,
@@ -44,7 +48,8 @@ data class ProductDependencies(
     val getProductsUseCase: GetProductsUseCase,
     val getSortingSettingUseCase: GetSortingSettingUseCase,
     val saveSortingSettingUseCase: SaveSortingSettingUseCase,
-    val mapProductsUseCase: MapProductsUseCase
+    val mapProductsUseCase: MapProductsUseCase,
+    val updateProductUseCase: UpdateProductUseCase
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -98,6 +103,9 @@ class ProductViewModel(
             is ProductIntent.ChangeSorting -> changeSorting(intent.byName)
             ProductIntent.DeleteAllProducts -> deleteAllProducts()
             ProductIntent.ClearBoughtProducts -> clearBoughtProducts()
+            is ProductIntent.SetDeletedProduct -> setDeletedProduct(intent.product)
+            is ProductIntent.SetChangeProduct -> setChangeProduct(intent.product)
+            is ProductIntent.ChangeProduct -> changeProduct(intent.newData)
         }
         emit(result)
     }
@@ -111,7 +119,18 @@ class ProductViewModel(
             is ProductResult.SortingChanged -> reduceSortingChanged(result)
             is ProductResult.ProductsCleaned -> reduceProductsCleaned(result)
             is ProductResult.Error -> reduceError(result)
+            ProductResult.StateUpdated -> {}
         }
+    }
+
+    private fun setDeletedProduct(product: Product): ProductResult {
+        _state.update { it.copy(productToDelete = product) }
+        return ProductResult.StateUpdated
+    }
+
+    private fun setChangeProduct(product: Product): ProductResult {
+        _state.update { it.copy(productToChange = product) }
+        return ProductResult.StateUpdated
     }
 
     private suspend fun loadProducts(listId: Int): ProductResult {
@@ -168,12 +187,33 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun deleteProduct(productId: Int): ProductResult {
+    private suspend fun deleteProduct(productId: Long): ProductResult {
         return try {
-            deps.deleteProductUseCase(DeleteProductParams(productId))
+            deps.deleteProductUseCase(DeleteProductParams(productId.toInt()))
             loadProducts(_state.value.currentListId)
         } catch (e: Exception) {
             ProductResult.Error("Ошибка удаления: ${e.message}")
+        }
+    }
+
+    private suspend fun changeProduct(newData: ProductAddBottomSheetState): ProductResult {
+        return try {
+            if (state.value.productToChange != null) {
+                deps.updateProductUseCase(
+                    ChangeProductParams(
+                        id = state.value.productToChange!!.id.toInt(),
+                        name = newData.productName,
+                        unit = newData.selectedUnit,
+                        value = newData.quantity.toFloatOrNull(),
+                        listId = _state.value.currentListId,
+                        position = state.value.productToChange!!.position,
+                        isBought = state.value.productToChange!!.isBought
+                    )
+                )
+            }
+            loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error("Ошибка изменения сортировки: ${e.message}")
         }
     }
 

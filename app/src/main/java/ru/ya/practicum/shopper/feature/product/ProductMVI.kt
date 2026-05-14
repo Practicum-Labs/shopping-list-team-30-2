@@ -1,13 +1,16 @@
 package ru.ya.practicum.shopper.feature.product
 
 import ru.ya.practicum.shopper.core.model.Product
+import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 
 data class ProductViewState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val currentListId: Int = 0,
-    val sortingByName: Boolean = false
+    val sortingByName: Boolean = false,
+    val productToDelete: Product? = null,
+    val productToChange: Product? = null
 )
 
 sealed class ProductIntent {
@@ -19,10 +22,13 @@ sealed class ProductIntent {
         val listId: Int
     ) : ProductIntent()
     data class ToggleProductBought(val product: Product, val listId: Int) : ProductIntent()
-    data class DeleteProduct(val productId: Int) : ProductIntent()
+    data class DeleteProduct(val productId: Long) : ProductIntent()
     data class ChangeSorting(val byName: Boolean) : ProductIntent()
     object DeleteAllProducts : ProductIntent()
     object ClearBoughtProducts : ProductIntent()
+    data class SetDeletedProduct(val product: Product) : ProductIntent()
+    data class SetChangeProduct(val product: Product) : ProductIntent()
+    data class ChangeProduct(val newData: ProductAddBottomSheetState): ProductIntent()
 }
 
 sealed class ProductResult {
@@ -33,6 +39,7 @@ sealed class ProductResult {
     data class SortingChanged(val byName: Boolean, val products: List<Product>) : ProductResult()
     data class ProductsCleaned(val products: List<Product>) : ProductResult()
     data class Error(val message: String) : ProductResult()
+    object StateUpdated : ProductResult()
 }
 
 sealed class ProductEffect {

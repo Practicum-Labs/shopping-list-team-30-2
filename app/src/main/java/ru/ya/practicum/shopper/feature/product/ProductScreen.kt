@@ -21,10 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import org.koin.androidx.compose.koinViewModel
 import ru.ya.practicum.shopper.R
-import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.product.components.ChangeProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ConfirmDeleteDialog
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
+import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetConfig
@@ -32,6 +33,7 @@ import ru.ya.practicum.shopper.feature.product.components.ProductCreateItem
 import ru.ya.practicum.shopper.feature.product.components.ProductEmptyContent
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
 import ru.ya.practicum.shopper.feature.product.components.ProductTopBar
+import ru.ya.practicum.shopper.feature.product.components.SwipeItemActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongMethod", "LongParameterList")
@@ -52,6 +54,8 @@ fun ProductScreen(
     var showProductBottomSheet by remember { mutableStateOf(false) }
     var showDialogDeleteAll by remember { mutableStateOf(false) }
     var showDialogClearBought by remember { mutableStateOf(false) }
+    var showDialogDeleteItem by remember { mutableStateOf(false) }
+    var showChangeBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(ProductIntent.LoadProducts(listId))
@@ -86,8 +90,41 @@ fun ProductScreen(
         ProductScreenContent(
             state = state,
             innerPadding = innerPadding,
-            onProductClick = { product ->
-                viewModel.onIntent(ProductIntent.ToggleProductBought(product, listId))
+            actions = SwipeItemActions(
+                onItemClick = { product ->
+                    viewModel.onIntent(ProductIntent.ToggleProductBought(product, listId))
+                },
+                onDelete = { product ->
+                    viewModel.onIntent(ProductIntent.SetDeletedProduct(product))
+                    showDialogDeleteItem = true
+                },
+                onRename = { product ->
+                    viewModel.onIntent(ProductIntent.SetChangeProduct(product = product))
+                    showChangeBottomSheet = true
+                }
+            )
+        )
+    }
+
+    if (showChangeBottomSheet) {
+        ChangeProductBottomSheet(
+            onDismiss = {newData ->
+                viewModel.onIntent(ProductIntent.ChangeProduct( newData = newData))
+                showChangeBottomSheet = false},
+            productState = state.productToChange
+        )
+    }
+
+    if (showDialogDeleteItem) {
+        ConfirmDeleteDialog(
+            stringResource(
+                R.string.delete_item_text,
+                state.productToDelete?.name ?: ""
+            ),
+            { showDialogDeleteItem = false },
+            {
+                state.productToDelete?.let { viewModel.onIntent(ProductIntent.DeleteProduct(it.id)) }
+                showDialogDeleteItem = false
             }
         )
     }
@@ -158,7 +195,7 @@ fun ProductScreen(
 private fun ProductScreenContent(
     state: ProductViewState,
     innerPadding: PaddingValues,
-    onProductClick: (Product) -> Unit
+    actions: SwipeItemActions,
 ) {
     if (state.products.isEmpty() && !state.isLoading) {
         ProductEmptyContent(
@@ -170,7 +207,7 @@ private fun ProductScreenContent(
     } else {
         ProductItemsContent(
             products = state.products,
-            onItemClick = onProductClick,
+            actions = actions,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
