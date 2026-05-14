@@ -110,4 +110,6 @@
     <string name="error_no_internet">Нет подключения к интернету. Проверьте настройки сети.</string>
     <string name="sort_by_custom">пользовательская</string>
     <string name="sort_by_alphabet">по алфавиту</string>
+    <string name="delete_item_text">Удалить товар «%s»?</string>
+    <string name="error_change_product">Ошибка изменения продукта: %1$s</string>
 </resources>
