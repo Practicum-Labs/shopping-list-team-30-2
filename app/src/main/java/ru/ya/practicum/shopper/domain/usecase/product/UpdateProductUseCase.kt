@@ -1,6 +1,5 @@
 package ru.ya.practicum.shopper.domain.usecase.product
 
-import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 import ru.ya.practicum.shopper.domain.usecase.UseCase

@@ -62,7 +62,6 @@ fun SwipeProductItemCard(
     product: Product,
     actions: SwipeItemActions
 ) {
-
     val scope = rememberCoroutineScope()
     val state = rememberSwipeState()
     Box(

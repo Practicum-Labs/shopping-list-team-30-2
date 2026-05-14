@@ -21,6 +21,7 @@ sealed class ProductIntent {
         val unit: String,
         val listId: Int
     ) : ProductIntent()
+
     data class ToggleProductBought(val product: Product, val listId: Int) : ProductIntent()
     data class DeleteProduct(val productId: Long) : ProductIntent()
     data class ChangeSorting(val byName: Boolean) : ProductIntent()
@@ -28,7 +29,7 @@ sealed class ProductIntent {
     object ClearBoughtProducts : ProductIntent()
     data class SetDeletedProduct(val product: Product) : ProductIntent()
     data class SetChangeProduct(val product: Product) : ProductIntent()
-    data class ChangeProduct(val newData: ProductAddBottomSheetState): ProductIntent()
+    data class ChangeProduct(val newData: ProductAddBottomSheetState) : ProductIntent()
 }
 
 sealed class ProductResult {

@@ -25,7 +25,6 @@ import ru.ya.practicum.shopper.core.ui.theme.Dimens
 import ru.ya.practicum.shopper.feature.product.components.ChangeProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ConfirmDeleteDialog
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheet
-import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheet
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetCallBacks
 import ru.ya.practicum.shopper.feature.product.components.ProductBottomSheetConfig
@@ -108,9 +107,10 @@ fun ProductScreen(
 
     if (showChangeBottomSheet) {
         ChangeProductBottomSheet(
-            onDismiss = {newData ->
-                viewModel.onIntent(ProductIntent.ChangeProduct( newData = newData))
-                showChangeBottomSheet = false},
+            onDismiss = { newData ->
+                viewModel.onIntent(ProductIntent.ChangeProduct(newData = newData))
+                showChangeBottomSheet = false
+            },
             productState = state.productToChange
         )
     }

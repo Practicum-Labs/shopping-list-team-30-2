@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.core.ui.theme.Dimens
 
@@ -30,9 +29,7 @@ fun ChangeProductBottomSheet(
         )
     }
 
-    val density = LocalDensity.current
     var sheetTopPx by remember { mutableStateOf(0f) }
-
 
     Box(
         modifier = Modifier
