@@ -1,5 +1,6 @@
 package ru.ya.practicum.shopper.feature.auth
 
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -8,6 +9,8 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -36,6 +39,8 @@ class AuthRepository(
             Result.failure(AuthException.InvalidEmail())
         } catch (_: FirebaseAuthUserCollisionException) {
             Result.failure(AuthException.EmailAlreadyInUse())
+        } catch (_: FirebaseNetworkException) {
+            Result.failure(AuthException.NetworkError("Network error occurred"))
         } catch (_: SocketTimeoutException) {
             Result.failure(AuthException.NetworkTimeout())
         } catch (_: UnknownHostException) {
@@ -62,6 +67,8 @@ class AuthRepository(
             Result.failure(AuthException.UserNotFound())
         } catch (_: FirebaseAuthInvalidCredentialsException) {
             Result.failure(AuthException.WrongPassword())
+        } catch (_: FirebaseNetworkException) {
+            Result.failure(AuthException.NetworkError("Network error occurred"))
         } catch (_: SocketTimeoutException) {
             Result.failure(AuthException.NetworkTimeout())
         } catch (_: UnknownHostException) {
@@ -79,6 +86,8 @@ class AuthRepository(
             Result.failure(AuthException.UserNotFound())
         } catch (_: FirebaseAuthInvalidCredentialsException) {
             Result.failure(AuthException.InvalidEmail())
+        } catch (_: FirebaseNetworkException) {
+            Result.failure(AuthException.NetworkError("Network error occurred"))
         } catch (_: SocketTimeoutException) {
             Result.failure(AuthException.NetworkTimeout())
         } catch (_: UnknownHostException) {
@@ -95,28 +104,24 @@ data class AuthResult(
     val isEmailVerified: Boolean = false
 )
 
-sealed class AuthException(message: String) : Exception(message) {
-    class WeakPassword : AuthException("Пароль должен содержать минимум 6 символов")
-    class InvalidEmail : AuthException("Неверный формат email")
-    class EmailAlreadyInUse : AuthException("Пользователь с таким email уже существует")
-    class UserNotFound : AuthException("Пользователь с таким email не найден")
-    class WrongPassword : AuthException("Неверный пароль")
-    class NetworkTimeout : AuthException("Превышено время ожидания. Проверьте подключение")
-    class NoInternet : AuthException("Отсутствует подключение к интернету")
-    data class NetworkError(val detail: String) : AuthException("Ошибка сети: $detail")
-    class UserCreationFailed : AuthException("Ошибка создания пользователя")
-    class LoginFailed : AuthException("Ошибка входа в систему")
+sealed class AuthException(
+    val messageResId: Int
+) : Exception() {
+    class WeakPassword : AuthException(R.string.error_auth_weak_password)
+    class InvalidEmail : AuthException(R.string.error_auth_invalid_email)
+    class EmailAlreadyInUse : AuthException(R.string.error_auth_email_in_use)
+    class UserNotFound : AuthException(R.string.error_auth_user_not_found)
+    class WrongPassword : AuthException(R.string.error_auth_wrong_password)
+    class NetworkTimeout : AuthException(R.string.error_auth_network_timeout)
+    class NoInternet : AuthException(R.string.error_auth_no_internet)
+    data class NetworkError(val detail: String) : AuthException(R.string.error_auth_network_error)
+    class UserCreationFailed : AuthException(R.string.error_auth_user_creation_failed)
+    class LoginFailed : AuthException(R.string.error_auth_login_failed)
 
-    fun getUserMessage(): String = when (this) {
-        is WeakPassword -> "Пароль должен содержать минимум 6 символов"
-        is InvalidEmail -> "Введите корректный email"
-        is EmailAlreadyInUse -> "Пользователь с таким email уже существует"
-        is UserNotFound -> "Пользователь с таким email не найден"
-        is WrongPassword -> "Неверный пароль"
-        is NetworkTimeout -> "Превышено время ожидания. Проверьте подключение к интернету"
-        is NoInternet -> "Отсутствует подключение к интернету"
-        is UserCreationFailed -> "Ошибка создания пользователя. Попробуйте позже"
-        is LoginFailed -> "Ошибка входа в систему. Попробуйте позже"
-        is NetworkError -> detail
+    fun getUserMessage(resourceProvider: ResourceProvider): String {
+        return when (this) {
+            is NetworkError -> resourceProvider.getString(messageResId, detail)
+            else -> resourceProvider.getString(messageResId)
+        }
     }
 }

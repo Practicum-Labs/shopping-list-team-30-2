@@ -9,9 +9,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 
 class RecoveryViewModel(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RecoveryState())
@@ -30,7 +33,9 @@ class RecoveryViewModel(
     }
 
     private fun updateEmail(email: String) {
-        val emailError = AuthValidation.validateEmail(email)
+        val validationError = AuthValidation.validateEmail(email)
+        val emailError = validationError?.getMessage(resourceProvider)
+
         _state.update {
             it.copy(
                 email = email,
@@ -50,9 +55,11 @@ class RecoveryViewModel(
     }
 
     private fun isValid(): Boolean {
-        val emailError = AuthValidation.validateEmail(_state.value.email)
+        val validationError = AuthValidation.validateEmail(_state.value.email)
+        val emailError = validationError?.getMessage(resourceProvider)
+
         _state.update { it.copy(emailError = emailError) }
-        return emailError == null
+        return validationError == null
     }
 
     private fun submit() {
@@ -76,8 +83,11 @@ class RecoveryViewModel(
                 },
                 onFailure = { exception ->
                     val message = when (exception) {
-                        is AuthException -> exception.getUserMessage()
-                        else -> "Ошибка: ${exception.message}"
+                        is AuthException -> exception.getUserMessage(resourceProvider)
+                        else -> resourceProvider.getString(
+                            R.string.error_unknown,
+                            exception.message ?: ""
+                        )
                     }
                     _state.update {
                         it.copy(
@@ -85,7 +95,6 @@ class RecoveryViewModel(
                             generalError = message
                         )
                     }
-                    sendEffect(RecoveryEffect.ShowError(message))
                 }
             )
         }

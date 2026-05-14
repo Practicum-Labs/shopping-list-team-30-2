@@ -17,7 +17,7 @@ val authModule = module {
     single { AuthDataStore(androidContext()) }
     single { AuthRepository(get(), get()) }
 
-    viewModel { AuthViewModel(get()) }
-    viewModel { SignUpViewModel(get()) }
-    viewModel { RecoveryViewModel(get()) }
+    viewModel { AuthViewModel(get(), get()) }
+    viewModel { SignUpViewModel(get(), get()) }
+    viewModel { RecoveryViewModel(get(), get()) }
 }

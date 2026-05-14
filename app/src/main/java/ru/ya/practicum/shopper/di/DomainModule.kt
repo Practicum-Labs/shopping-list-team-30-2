@@ -87,13 +87,19 @@ val domainModule = module {
         )
     }
 
-    factory { ProductViewModel(get()) }
+    factory {
+        ProductViewModel(
+            deps = get(),
+            resourceProvider = get()
+        )
+    }
 
     factory { (userId: String) ->
         MainViewModel(
             userId = userId,
             useCases = get(),
-            shoppingListItemInteractor = get()
+            shoppingListItemInteractor = get(),
+            resourceProvider = get()
         )
     }
 

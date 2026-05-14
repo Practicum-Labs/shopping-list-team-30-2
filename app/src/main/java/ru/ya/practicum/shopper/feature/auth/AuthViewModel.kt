@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 
 data class AuthState(
     val email: String = "",
@@ -36,7 +38,8 @@ sealed class AuthEffect {
 }
 
 class AuthViewModel(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
@@ -84,19 +87,19 @@ class AuthViewModel(
         val state = _state.value
         return when {
             state.email.isBlank() -> {
-                setError("Введите email")
+                setError(resourceProvider.getString(R.string.error_email_empty))
                 false
             }
             !AuthValidation.isEmailValid(state.email) -> {
-                setError("Введите корректный email")
+                setError(resourceProvider.getString(R.string.error_email_invalid))
                 false
             }
             state.password.isBlank() -> {
-                setError("Введите пароль")
+                setError(resourceProvider.getString(R.string.error_password_empty))
                 false
             }
             !AuthValidation.isPasswordValid(state.password) -> {
-                setError("Пароль должен быть не менее 6 символов")
+                setError(resourceProvider.getString(R.string.error_password_too_short))
                 false
             }
             else -> true
@@ -127,11 +130,10 @@ class AuthViewModel(
                 },
                 onFailure = { exception ->
                     val message = when (exception) {
-                        is AuthException -> exception.getUserMessage()
-                        else -> "Ошибка: ${exception.message}"
+                        is AuthException -> exception.getUserMessage(resourceProvider)
+                        else -> resourceProvider.getString(R.string.error_unknown, exception.message ?: "")
                     }
                     _state.update { it.copy(isLoading = false, error = message) }
-                    sendEffect(AuthEffect.ShowError(message))
                 }
             )
         }
