@@ -27,6 +27,7 @@ import ru.ya.practicum.shopper.domain.usecase.product.GetSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.MapProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.UpdateProductUseCase
 import ru.ya.practicum.shopper.feature.main.MainUseCases
 import ru.ya.practicum.shopper.feature.main.MainViewModel
 import ru.ya.practicum.shopper.feature.onboard.OnboardViewModel
@@ -69,6 +70,7 @@ val domainModule = module {
     factory { UpdateListIconUseCase(get()) }
     factory { DeleteAllListsUseCase(get()) }
     factory { MapListsUseCase() }
+    factory { UpdateProductUseCase(get()) }
 
     factory {
         val context = androidContext()
@@ -83,17 +85,24 @@ val domainModule = module {
             getProductsUseCase = get(),
             getSortingSettingUseCase = get(),
             saveSortingSettingUseCase = get(),
-            mapProductsUseCase = get()
+            mapProductsUseCase = get(),
+            updateProductUseCase = get()
         )
     }
 
-    factory { ProductViewModel(get()) }
+    factory {
+        ProductViewModel(
+            deps = get(),
+            resourceProvider = get()
+        )
+    }
 
     factory { (userId: String) ->
         MainViewModel(
             userId = userId,
             useCases = get(),
-            shoppingListItemInteractor = get()
+            shoppingListItemInteractor = get(),
+            resourceProvider = get()
         )
     }
 

@@ -12,7 +12,7 @@ import ru.ya.practicum.shopper.core.model.Product
 @Composable
 fun ProductItemsContent(
     products: List<Product>,
-    onItemClick: (Product) -> Unit,
+    actions: SwipeItemActions,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -24,9 +24,9 @@ fun ProductItemsContent(
             items = products,
             key = { it.id }
         ) { product ->
-            ProductItemCard(
+            SwipeProductItemCard(
                 product = product,
-                onItemClick = onItemClick
+                actions = actions
             )
         }
     }

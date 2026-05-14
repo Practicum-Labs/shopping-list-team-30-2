@@ -7,6 +7,7 @@ import ru.ya.practicum.shopper.core.ui.DefaultPreviewContainer
 import ru.ya.practicum.shopper.core.ui.theme.Theme
 import ru.ya.practicum.shopper.feature.product.components.ProductItemCard
 import ru.ya.practicum.shopper.feature.product.components.ProductItemsContent
+import ru.ya.practicum.shopper.feature.product.components.SwipeItemActions
 
 @Preview
 @Composable
@@ -100,7 +101,11 @@ private fun ProductContentPreviewLight() {
     Theme(darkTheme = false) {
         ProductItemsContent(
             products = previewProducts,
-            onItemClick = {}
+            actions = SwipeItemActions(
+                onItemClick = {},
+                onDelete = {},
+                onRename = {}
+            )
         )
     }
 }
@@ -111,7 +116,11 @@ private fun ProductItemsContentPreviewDark() {
     Theme(darkTheme = true) {
         ProductItemsContent(
             products = previewProducts,
-            onItemClick = {}
+            actions = SwipeItemActions(
+                onItemClick = {},
+                onDelete = {},
+                onRename = {}
+            )
         )
     }
 }
@@ -122,7 +131,11 @@ private fun ProductItemsContentBoughtPreviewLight() {
     Theme(darkTheme = false) {
         ProductItemsContent(
             products = previewProductsOff,
-            onItemClick = {}
+            actions = SwipeItemActions(
+                onItemClick = {},
+                onDelete = {},
+                onRename = {}
+            )
         )
     }
 }
@@ -133,7 +146,11 @@ private fun ProductItemsContentBoughtPreviewDark() {
     Theme(darkTheme = true) {
         ProductItemsContent(
             products = previewProductsOff,
-            onItemClick = {}
+            actions = SwipeItemActions(
+                onItemClick = {},
+                onDelete = {},
+                onRename = {}
+            )
         )
     }
 }

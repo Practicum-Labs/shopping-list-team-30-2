@@ -25,7 +25,9 @@ object Dimens {
     val dp44 = 44.dp
     val dp48 = 48.dp
     val dp94 = 94.dp
+    val dp128 = 128.dp
     val dp180 = 180.dp
+    val dp480 = 480.dp
 
     val sp0 = 0.sp
     val sp01 = 0.1.sp

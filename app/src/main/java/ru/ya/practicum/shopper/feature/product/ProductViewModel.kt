@@ -15,8 +15,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.model.Product
+import ru.ya.practicum.shopper.core.resource.ResourceProvider
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.AddProductUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.ChangeProductParams
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsParams
 import ru.ya.practicum.shopper.domain.usecase.product.ClearBoughtProductsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.DeleteAllProductsParams
@@ -32,6 +36,8 @@ import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingParams
 import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.UpdateProductUseCase
+import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 
 data class ProductDependencies(
     val defaultUnit: String,
@@ -44,13 +50,15 @@ data class ProductDependencies(
     val getProductsUseCase: GetProductsUseCase,
     val getSortingSettingUseCase: GetSortingSettingUseCase,
     val saveSortingSettingUseCase: SaveSortingSettingUseCase,
-    val mapProductsUseCase: MapProductsUseCase
+    val mapProductsUseCase: MapProductsUseCase,
+    val updateProductUseCase: UpdateProductUseCase
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Suppress("TooManyFunctions", "TooGenericExceptionCaught")
 class ProductViewModel(
-    private val deps: ProductDependencies
+    private val deps: ProductDependencies,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductViewState())
@@ -98,6 +106,9 @@ class ProductViewModel(
             is ProductIntent.ChangeSorting -> changeSorting(intent.byName)
             ProductIntent.DeleteAllProducts -> deleteAllProducts()
             ProductIntent.ClearBoughtProducts -> clearBoughtProducts()
+            is ProductIntent.SetDeletedProduct -> setDeletedProduct(intent.product)
+            is ProductIntent.SetChangeProduct -> setChangeProduct(intent.product)
+            is ProductIntent.ChangeProduct -> changeProduct(intent.newData)
         }
         emit(result)
     }
@@ -111,7 +122,18 @@ class ProductViewModel(
             is ProductResult.SortingChanged -> reduceSortingChanged(result)
             is ProductResult.ProductsCleaned -> reduceProductsCleaned(result)
             is ProductResult.Error -> reduceError(result)
+            ProductResult.StateUpdated -> {}
         }
+    }
+
+    private fun setDeletedProduct(product: Product): ProductResult {
+        _state.update { it.copy(productToDelete = product) }
+        return ProductResult.StateUpdated
+    }
+
+    private fun setChangeProduct(product: Product): ProductResult {
+        _state.update { it.copy(productToChange = product) }
+        return ProductResult.StateUpdated
     }
 
     private suspend fun loadProducts(listId: Int): ProductResult {
@@ -129,7 +151,7 @@ class ProductViewModel(
             )
             ProductResult.ProductsLoaded(products)
         } catch (e: Exception) {
-            ProductResult.Error(e.message ?: "Unknown error")
+            ProductResult.Error(resourceProvider.getString(R.string.error_unknown, e.message ?: ""))
         }
     }
 
@@ -146,7 +168,12 @@ class ProductViewModel(
             )
             loadProducts(intent.listId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка добавления: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_add_product,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -164,16 +191,52 @@ class ProductViewModel(
             )
             loadProducts(intent.listId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка изменения статуса: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_toggle_product,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
-    private suspend fun deleteProduct(productId: Int): ProductResult {
+    private suspend fun deleteProduct(productId: Long): ProductResult {
         return try {
-            deps.deleteProductUseCase(DeleteProductParams(productId))
+            deps.deleteProductUseCase(DeleteProductParams(productId.toInt()))
             loadProducts(_state.value.currentListId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка удаления: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_delete_product,
+                    e.message ?: ""
+                )
+            )
+        }
+    }
+
+    private suspend fun changeProduct(newData: ProductAddBottomSheetState): ProductResult {
+        return try {
+            if (state.value.productToChange != null) {
+                deps.updateProductUseCase(
+                    ChangeProductParams(
+                        id = state.value.productToChange!!.id.toInt(),
+                        name = newData.productName,
+                        unit = newData.selectedUnit,
+                        value = newData.quantity.toFloatOrNull(),
+                        listId = _state.value.currentListId,
+                        position = state.value.productToChange!!.position,
+                        isBought = state.value.productToChange!!.isBought
+                    )
+                )
+            }
+            loadProducts(_state.value.currentListId)
+        } catch (e: Exception) {
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_change_product,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -183,7 +246,12 @@ class ProductViewModel(
             _state.update { it.copy(sortingByName = byName) }
             loadProducts(_state.value.currentListId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка изменения сортировки: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_change_sorting,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -194,7 +262,12 @@ class ProductViewModel(
             )
             loadProducts(_state.value.currentListId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка удаления всех товаров: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_delete_all_products,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
@@ -205,11 +278,16 @@ class ProductViewModel(
             )
             loadProducts(_state.value.currentListId)
         } catch (e: Exception) {
-            ProductResult.Error("Ошибка очистки купленных товаров: ${e.message}")
+            ProductResult.Error(
+                resourceProvider.getString(
+                    R.string.error_clear_bought,
+                    e.message ?: ""
+                )
+            )
         }
     }
 
-    private suspend fun reduceProductsLoaded(result: ProductResult.ProductsLoaded) {
+    private fun reduceProductsLoaded(result: ProductResult.ProductsLoaded) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -219,7 +297,7 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun reduceProductAdded(result: ProductResult.ProductAdded) {
+    private fun reduceProductAdded(result: ProductResult.ProductAdded) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -229,7 +307,7 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun reduceProductToggled(result: ProductResult.ProductToggled) {
+    private fun reduceProductToggled(result: ProductResult.ProductToggled) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -239,7 +317,7 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun reduceProductDeleted(result: ProductResult.ProductDeleted) {
+    private fun reduceProductDeleted(result: ProductResult.ProductDeleted) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -249,7 +327,7 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun reduceSortingChanged(result: ProductResult.SortingChanged) {
+    private fun reduceSortingChanged(result: ProductResult.SortingChanged) {
         _state.update {
             it.copy(
                 isLoading = false,
@@ -260,7 +338,7 @@ class ProductViewModel(
         }
     }
 
-    private suspend fun reduceProductsCleaned(result: ProductResult.ProductsCleaned) {
+    private fun reduceProductsCleaned(result: ProductResult.ProductsCleaned) {
         _state.update {
             it.copy(
                 isLoading = false,

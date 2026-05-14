@@ -5,5 +5,6 @@ data class Product(
     val name: String,
     val amount: String,
     val unit: String = "",
-    val isBought: Boolean = false
+    val isBought: Boolean = false,
+    val position: Int = 0
 )
