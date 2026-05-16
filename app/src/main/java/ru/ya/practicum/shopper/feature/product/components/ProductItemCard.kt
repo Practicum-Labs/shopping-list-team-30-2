@@ -72,7 +72,8 @@ fun SwipeProductItemCard(
         ActionButtonsRow(
             state = state,
             onRename = { actions.onRename(product) },
-            onDelete = { actions.onDelete(product) }
+            onDelete = { actions.onDelete(product) },
+            modifier = Modifier.matchParentSize()
         )
         ProductItemCard(
             product = product,
@@ -155,7 +156,8 @@ fun ProductItem(
 private fun ActionButtonsRow(
     state: AnchoredDraggableState<ProductSwipeState>,
     onRename: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    modifier: Modifier
 ) {
     val scope = rememberCoroutineScope()
 
@@ -167,7 +169,7 @@ private fun ActionButtonsRow(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(end = Dimens.dp20),
         horizontalArrangement = Arrangement.End,
