@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import ru.ya.practicum.shopper.data.local.entity.ProductPositionUpdate
 import ru.ya.practicum.shopper.data.local.entity.ShopperItemEntity
 
 @Dao
@@ -16,8 +17,12 @@ interface ShopperItemDao {
     @Query("SELECT * FROM ${ShopperItemEntity.TABLE_NAME} WHERE listId = :listId ORDER BY name ASC")
     fun getItemsOrderedByName(listId: Int): Flow<List<ShopperItemEntity>>
 
+    @Update(entity = ShopperItemEntity::class)
+    suspend fun updatePositions(updates: List<ProductPositionUpdate>)
+
     @Insert
     suspend fun insert(item: ShopperItemEntity)
+
     @Update
     suspend fun update(item: ShopperItemEntity)
     @Delete

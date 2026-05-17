@@ -30,6 +30,7 @@ sealed class ProductIntent {
     data class SetDeletedProduct(val product: Product) : ProductIntent()
     data class SetChangeProduct(val product: Product) : ProductIntent()
     data class ChangeProduct(val newData: ProductAddBottomSheetState) : ProductIntent()
+    data class OnMove(val from: Int, val to: Int) : ProductIntent()
 }
 
 sealed class ProductResult {

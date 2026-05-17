@@ -101,7 +101,10 @@ fun ProductScreen(
                     viewModel.onIntent(ProductIntent.SetChangeProduct(product = product))
                     showChangeBottomSheet = true
                 }
-            )
+            ),
+            onMove = { from, to ->
+                viewModel.onIntent(ProductIntent.OnMove(from, to))
+            }
         )
     }
 
@@ -196,6 +199,7 @@ private fun ProductScreenContent(
     state: ProductViewState,
     innerPadding: PaddingValues,
     actions: SwipeItemActions,
+    onMove: (from: Int, to: Int) -> Unit
 ) {
     if (state.products.isEmpty() && !state.isLoading) {
         ProductEmptyContent(
@@ -210,7 +214,8 @@ private fun ProductScreenContent(
             actions = actions,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            onMove = onMove
         )
     }
 }

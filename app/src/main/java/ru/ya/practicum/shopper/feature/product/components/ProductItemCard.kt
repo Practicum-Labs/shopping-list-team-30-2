@@ -60,12 +60,13 @@ fun ProductItemCard(
 @Composable
 fun SwipeProductItemCard(
     product: Product,
-    actions: SwipeItemActions
+    actions: SwipeItemActions,
+    modifier: Modifier
 ) {
     val scope = rememberCoroutineScope()
     val state = rememberSwipeState()
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
     ) {

@@ -10,7 +10,8 @@ data class ToggleProductBoughtParams(
     val productName: String,
     val productUnit: String?,
     val productValue: Float?,
-    val currentIsBought: Boolean
+    val currentIsBought: Boolean,
+    val position: Int
 )
 
 class ToggleProductBoughtUseCase(
@@ -24,7 +25,7 @@ class ToggleProductBoughtUseCase(
             unit = params.productUnit,
             value = params.productValue,
             isBought = !params.currentIsBought,
-            position = 0
+            position = params.position
         )
 
         repository.updateItem(updatedItem, params.listId)
