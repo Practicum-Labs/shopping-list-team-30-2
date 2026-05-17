@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import ru.ya.practicum.shopper.R
@@ -24,8 +26,7 @@ fun ProductItemsContent(
     actions: SwipeItemActions,
     onMove: (from: Int, to: Int) -> Unit,
     modifier: Modifier = Modifier,
-    isDragEnabled: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
+    isDragEnabled: Boolean = false
 ) {
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -35,7 +36,7 @@ fun ProductItemsContent(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = lazyListState,
-        contentPadding = contentPadding
+        contentPadding = PaddingValues(0.dp)
     ) {
         items(
             items = products,
@@ -57,6 +58,7 @@ fun ProductItemsContent(
                                 painter = painterResource(
                                     id = R.drawable.drag_handle
                                 ),
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
                                 contentDescription = null,
                                 modifier = Modifier.draggableHandle()
                             )
