@@ -168,6 +168,7 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.firebase.auth.ktx.v2321)
+    implementation(libs.reorderable)
 
     ksp(libs.androidx.room.compiler)
 

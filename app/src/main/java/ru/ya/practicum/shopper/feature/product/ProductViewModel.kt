@@ -36,6 +36,7 @@ import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingParams
 import ru.ya.practicum.shopper.domain.usecase.product.SaveSortingSettingUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtParams
 import ru.ya.practicum.shopper.domain.usecase.product.ToggleProductBoughtUseCase
+import ru.ya.practicum.shopper.domain.usecase.product.UpdateProductPositionsUseCase
 import ru.ya.practicum.shopper.domain.usecase.product.UpdateProductUseCase
 import ru.ya.practicum.shopper.feature.product.components.ProductAddBottomSheetState
 
@@ -51,7 +52,8 @@ data class ProductDependencies(
     val getSortingSettingUseCase: GetSortingSettingUseCase,
     val saveSortingSettingUseCase: SaveSortingSettingUseCase,
     val mapProductsUseCase: MapProductsUseCase,
-    val updateProductUseCase: UpdateProductUseCase
+    val updateProductUseCase: UpdateProductUseCase,
+    val updateProductPositionsUseCase: UpdateProductPositionsUseCase
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -72,6 +74,20 @@ class ProductViewModel(
     init {
         setupSortingListener()
         processActions()
+    }
+
+    fun onMove(from: Int, to: Int): ProductResult {
+        val reordered = _state.value.products
+            .toMutableList()
+            .apply { add(to, removeAt(from)) }
+            .mapIndexed { index, product -> product.copy(position = index) }
+
+        _state.update { it.copy(products = reordered) }
+        viewModelScope.launch {
+            deps.updateProductPositionsUseCase(reordered)
+            loadProducts(_state.value.currentListId)
+        }
+        return ProductResult.StateUpdated
     }
 
     fun onIntent(intent: ProductIntent) {
@@ -109,6 +125,7 @@ class ProductViewModel(
             is ProductIntent.SetDeletedProduct -> setDeletedProduct(intent.product)
             is ProductIntent.SetChangeProduct -> setChangeProduct(intent.product)
             is ProductIntent.ChangeProduct -> changeProduct(intent.newData)
+            is ProductIntent.OnMove -> onMove(intent.from, intent.to)
         }
         emit(result)
     }
@@ -186,7 +203,8 @@ class ProductViewModel(
                     productName = intent.product.name,
                     productUnit = intent.product.unit,
                     productValue = intent.product.amount.toFloatOrNull(),
-                    currentIsBought = intent.product.isBought
+                    currentIsBought = intent.product.isBought,
+                    position = intent.product.position
                 )
             )
             loadProducts(intent.listId)

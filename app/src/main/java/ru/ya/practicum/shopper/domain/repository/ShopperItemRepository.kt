@@ -1,6 +1,7 @@
 package ru.ya.practicum.shopper.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 
 interface ShopperItemRepository {
@@ -12,4 +13,5 @@ interface ShopperItemRepository {
     fun getAllItems(listId: Int, orderByName: Boolean = false): Flow<List<ShopperItem>>
     suspend fun deleteAllItemsByListId(listId: Int)
     suspend fun clearBoughtItems(listId: Int)
+    suspend fun updateProductPositions(products: List<Product>)
 }

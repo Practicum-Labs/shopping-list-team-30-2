@@ -2,8 +2,10 @@ package ru.ya.practicum.shopper.data.impl
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import ru.ya.practicum.shopper.core.model.Product
 import ru.ya.practicum.shopper.data.converter.ShopperItemMapper
 import ru.ya.practicum.shopper.data.local.dao.ShopperItemDao
+import ru.ya.practicum.shopper.data.local.entity.ProductPositionUpdate
 import ru.ya.practicum.shopper.domain.model.ShopperItem
 import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
 
@@ -51,5 +53,9 @@ class ShopperItemRepositoryImpl(
 
     override suspend fun clearBoughtItems(listId: Int) {
         dao.clearBought(listId)
+    }
+
+    override suspend fun updateProductPositions(products: List<Product>) {
+        dao.updatePositions(products.map { ProductPositionUpdate(it.id, it.position) })
     }
 }

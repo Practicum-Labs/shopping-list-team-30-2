@@ -19,7 +19,8 @@ class MapProductsUseCase : UseCase<MapProductsParams, List<Product>>() {
                 name = item.name,
                 amount = formatValue(item.value, params.defaultQuantity),
                 unit = item.unit ?: params.defaultUnit,
-                isBought = item.isBought
+                isBought = item.isBought,
+                position = item.position
             )
         } ?: emptyList()
     }

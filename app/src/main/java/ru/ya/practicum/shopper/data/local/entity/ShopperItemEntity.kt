@@ -31,3 +31,8 @@ data class ShopperItemEntity(
         const val TABLE_NAME = "shopper_items"
     }
 }
+
+data class ProductPositionUpdate(
+    val id: Long,
+    val position: Int
+)

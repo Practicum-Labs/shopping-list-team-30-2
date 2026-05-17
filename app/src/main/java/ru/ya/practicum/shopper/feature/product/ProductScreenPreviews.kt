@@ -105,7 +105,8 @@ private fun ProductContentPreviewLight() {
                 onItemClick = {},
                 onDelete = {},
                 onRename = {}
-            )
+            ),
+            onMove = { _, _ -> }
         )
     }
 }
@@ -120,7 +121,8 @@ private fun ProductItemsContentPreviewDark() {
                 onItemClick = {},
                 onDelete = {},
                 onRename = {}
-            )
+            ),
+            onMove = { _, _ -> }
         )
     }
 }
@@ -135,7 +137,8 @@ private fun ProductItemsContentBoughtPreviewLight() {
                 onItemClick = {},
                 onDelete = {},
                 onRename = {}
-            )
+            ),
+            onMove = { _, _ -> }
         )
     }
 }
@@ -150,7 +153,8 @@ private fun ProductItemsContentBoughtPreviewDark() {
                 onItemClick = {},
                 onDelete = {},
                 onRename = {}
-            )
+            ),
+            onMove = { _, _ -> }
         )
     }
 }

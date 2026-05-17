@@ -46,37 +46,42 @@ import kotlin.math.roundToInt
 fun ProductItemCard(
     product: Product,
     onItemClick: (Product) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dragHandle: (@Composable () -> Unit)? = null
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        ProductItem(product, onItemClick)
+        ProductItem(product, onItemClick, dragHandle)
     }
 }
 
 @Composable
 fun SwipeProductItemCard(
     product: Product,
-    actions: SwipeItemActions
+    actions: SwipeItemActions,
+    modifier: Modifier = Modifier,
+    dragHandle: (@Composable () -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val state = rememberSwipeState()
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
     ) {
         ActionButtonsRow(
             state = state,
             onRename = { actions.onRename(product) },
-            onDelete = { actions.onDelete(product) }
+            onDelete = { actions.onDelete(product) },
+            modifier = Modifier.matchParentSize()
         )
         ProductItemCard(
             product = product,
             onItemClick = actions.onItemClick,
+            dragHandle = dragHandle,
             modifier = Modifier
                 .offset { IntOffset(state.offset.roundToInt(), 0) }
                 .anchoredDraggable(
@@ -100,7 +105,8 @@ private fun formatAmount(amount: String, unit: String): String {
 @Composable
 fun ProductItem(
     product: Product,
-    onItemClick: (Product) -> Unit
+    onItemClick: (Product) -> Unit,
+    dragHandle: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -144,6 +150,10 @@ fun ProductItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
+        Spacer(modifier = Modifier.width(Dimens.dp16))
+
+        dragHandle?.invoke()
     }
     HorizontalDivider(
         thickness = 1.dp,
@@ -155,7 +165,8 @@ fun ProductItem(
 private fun ActionButtonsRow(
     state: AnchoredDraggableState<ProductSwipeState>,
     onRename: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    modifier: Modifier
 ) {
     val scope = rememberCoroutineScope()
 
@@ -167,7 +178,7 @@ private fun ActionButtonsRow(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(end = Dimens.dp20),
         horizontalArrangement = Arrangement.End,
