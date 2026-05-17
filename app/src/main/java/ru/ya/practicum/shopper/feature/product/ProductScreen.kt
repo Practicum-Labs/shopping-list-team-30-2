@@ -199,7 +199,7 @@ private fun ProductScreenContent(
     state: ProductViewState,
     innerPadding: PaddingValues,
     actions: SwipeItemActions,
-    onMove: (from: Int, to: Int) -> Unit
+    onMove: (from: Int, to: Int) -> Unit,
 ) {
     if (state.products.isEmpty() && !state.isLoading) {
         ProductEmptyContent(
@@ -215,7 +215,8 @@ private fun ProductScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            onMove = onMove
+            onMove = onMove,
+            isDragEnabled = !state.sortingByName
         )
     }
 }
