@@ -1,0 +1,440 @@
+package ru.ya.practicum.shopper.feature.main
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+import ru.ya.practicum.shopper.R
+import ru.ya.practicum.shopper.core.model.ShoppingList
+import ru.ya.practicum.shopper.core.ui.AddListDialog
+import ru.ya.practicum.shopper.core.ui.DeleteAllListsDialog
+import ru.ya.practicum.shopper.core.ui.RenameListDialog
+import ru.ya.practicum.shopper.core.ui.theme.Dimens
+import ru.ya.practicum.shopper.feature.main.components.IconsModalBottomSheet
+import ru.ya.practicum.shopper.feature.main.components.MainCreateList
+import ru.ya.practicum.shopper.feature.main.components.MainEmptyContent
+import ru.ya.practicum.shopper.feature.main.components.MainTopBar
+import ru.ya.practicum.shopper.feature.main.components.SearchResultsContent
+import ru.ya.practicum.shopper.feature.main.components.SearchScreen
+import ru.ya.practicum.shopper.feature.main.components.ShoppingListsContent
+import ru.ya.practicum.shopper.feature.main.components.SwipeCardActions
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    userId: String,
+    onNavigateToProduct: (listId: Int, listName: String) -> Unit,
+    onThemeToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val resetSwipeTrigger = remember { mutableIntStateOf(0) }
+    val viewModel: MainViewModel = koinViewModel(
+        parameters = { parametersOf(userId) }
+    )
+
+    val state by viewModel.state.collectAsState()
+    val listState by viewModel.stateList.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    ErrorHandler(state.error, snackbarHostState) {
+        viewModel.onIntent(MainIntent.LoadLists)
+    }
+
+    MainScreenContent(
+        state = state,
+        listState = listState,
+        snackbarHostState = snackbarHostState,
+        callbacks = MainScreenCallbacks(
+            onNavigateToProduct = onNavigateToProduct,
+            onThemeToggle = onThemeToggle,
+            onIntent = viewModel::onIntent,
+            onListEvent = viewModel::onListEvent,
+            resetSwipeTrigger = resetSwipeTrigger
+        ),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun ErrorHandler(
+    error: String?,
+    snackbarHostState: SnackbarHostState,
+    onErrorShown: () -> Unit
+) {
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            onErrorShown()
+        }
+    }
+}
+
+data class MainScreenCallbacks(
+    val onNavigateToProduct: (listId: Int, listName: String) -> Unit,
+    val onThemeToggle: () -> Unit,
+    val onIntent: (MainIntent) -> Unit,
+    val onListEvent: (ListEvents) -> Unit,
+    val resetSwipeTrigger: MutableState<Int>
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenContent(
+    state: MainState,
+    listState: ListState,
+    snackbarHostState: SnackbarHostState,
+    callbacks: MainScreenCallbacks,
+    modifier: Modifier = Modifier
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    if (state.isSearchActive) {
+        SearchScreen(
+            query = state.searchInput,
+            onQueryChange = { callbacks.onIntent(MainIntent.UpdateSearchQuery(it)) },
+            onClose = { callbacks.onIntent(MainIntent.CloseSearch) },
+            onSearch = { callbacks.onIntent(MainIntent.PerformSearch) }
+        ) {
+            SearchScreenBody(
+                state = state,
+                onNavigateToProduct = callbacks.onNavigateToProduct,
+                onListIconClick = { shoppingList ->
+                    callbacks.onIntent(MainIntent.ShowIconPickerForList(shoppingList.id))
+                }
+            )
+        }
+    } else {
+        MainScaffold(
+            state = state,
+            listState = listState,
+            snackbarHostState = snackbarHostState,
+            callbacks = callbacks,
+            modifier = modifier
+        )
+        MainScreenDialogs(
+            state = state,
+            sheetState = sheetState,
+            onIntent = callbacks.onIntent
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScaffold(
+    state: MainState,
+    listState: ListState,
+    snackbarHostState: SnackbarHostState,
+    callbacks: MainScreenCallbacks,
+    modifier: Modifier = Modifier
+) {
+    val listActions = rememberSwipeCardActions(callbacks)
+
+    Scaffold(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            MainTopBar(
+                onSearchClick = { callbacks.onIntent(MainIntent.ToggleSearch) },
+                onDeleteClick = { callbacks.onIntent(MainIntent.ShowDeleteAllDialog) },
+                onThemeClick = callbacks.onThemeToggle
+            )
+        },
+        floatingActionButton = {
+            MainCreateList(onClick = { callbacks.onIntent(MainIntent.ShowAddDialog) })
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            MainScreenBody(
+                state = state,
+                listState = listState,
+                listActions = listActions,
+                onListEvent = callbacks.onListEvent,
+                resetSwipeTrigger = callbacks.resetSwipeTrigger
+            )
+        }
+    }
+}
+
+@Composable
+private fun rememberSwipeCardActions(
+    callbacks: MainScreenCallbacks
+): SwipeCardActions {
+    val copyText = stringResource(R.string.copy_list)
+    var resetCurrentSwipe by remember { mutableStateOf<(() -> Unit)?>(null) }
+    LaunchedEffect(callbacks.resetSwipeTrigger.value) {
+        resetCurrentSwipe?.invoke()
+    }
+    return remember(callbacks) {
+        SwipeCardActions(
+            onClick = { shoppingList ->
+                callbacks.onNavigateToProduct(shoppingList.id, shoppingList.name)
+            },
+            onIconClick = { shoppingList ->
+                callbacks.onIntent(MainIntent.ShowIconPickerForList(shoppingList.id))
+            },
+            onDelete = { shoppingList ->
+                callbacks.onListEvent(ListEvents.ShowDeleteListDialog(shoppingList))
+            },
+            onCopy = { shoppingList ->
+                callbacks.onListEvent(
+                    ListEvents.CopyList(shoppingList, "${shoppingList.name} $copyText")
+                )
+            },
+            onRename = { shoppingList ->
+                callbacks.onListEvent(ListEvents.ShowEditShoppingListDialog(shoppingList))
+            },
+            onResetSwipeRequest = { resetFn ->
+                resetCurrentSwipe = resetFn
+            }
+        )
+    }
+}
+
+@Composable
+private fun SearchScreenBody(
+    state: MainState,
+    onNavigateToProduct: (listId: Int, listName: String) -> Unit,
+    onListIconClick: (ShoppingList) -> Unit
+) {
+    val filteredLists = if (state.searchQuery.isBlank()) {
+        state.lists
+    } else {
+        state.lists.filter {
+            it.name.contains(state.searchQuery, ignoreCase = true)
+        }
+    }
+
+    when {
+        state.searchQuery.isNotBlank() && filteredLists.isEmpty() -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+                contentAlignment = Alignment.Center
+            ) {
+                SearchEmptyContent(
+                    modifier = Modifier
+                        .padding(horizontal = Dimens.dp16)
+                )
+            }
+        }
+
+        state.searchQuery.isNotBlank() -> {
+            SearchResultsContent(
+                lists = filteredLists,
+                onListClick = { shoppingList ->
+                    onNavigateToProduct(shoppingList.id, shoppingList.name)
+                }
+            )
+        }
+
+        else -> {
+            ShoppingListsContent(
+                lists = filteredLists,
+                listActions = SwipeCardActions(
+                    onClick = { shoppingList ->
+                        onNavigateToProduct(shoppingList.id, shoppingList.name)
+                    },
+                    onIconClick = onListIconClick,
+                    onDelete = {},
+                    onCopy = {},
+                    onRename = {}
+                )
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenDialogs(
+    state: MainState,
+    sheetState: androidx.compose.material3.SheetState,
+    onIntent: (MainIntent) -> Unit
+) {
+    if (state.showDeleteAllDialog) {
+        DeleteAllListsDialog(
+            onDismiss = { onIntent(MainIntent.HideDeleteAllDialog) },
+            onConfirm = { onIntent(MainIntent.ConfirmDeleteAll) }
+        )
+    }
+
+    if (state.showIconPicker) {
+        state.editingListId?.let { listId ->
+            IconsModalBottomSheet(
+                bottomSheetState = sheetState,
+                onDismissRequest = { onIntent(MainIntent.HideIconPicker) },
+                onIconClick = { iconResId ->
+                    onIntent(MainIntent.UpdateListIcon(listId, iconResId))
+                }
+            )
+        }
+    }
+
+    if (state.showAddDialog) {
+        AddListDialog(
+            onDismiss = { onIntent(MainIntent.HideAddDialog) },
+            onCreate = { listName ->
+                onIntent(
+                    MainIntent.CreateList(
+                        name = listName,
+                        iconId = state.selectedIconId
+                    )
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun MainScreenBody(
+    state: MainState,
+    listState: ListState,
+    listActions: SwipeCardActions,
+    onListEvent: (ListEvents) -> Unit,
+    resetSwipeTrigger: MutableState<Int>
+) {
+    val filteredLists = if (state.searchQuery.isBlank()) {
+        state.lists
+    } else {
+        state.lists.filter {
+            it.name.contains(state.searchQuery, ignoreCase = true)
+        }
+    }
+
+    when {
+        state.isLoading -> { /* Показываем индикатор загрузки */
+        }
+
+        state.lists.isEmpty() -> {
+            MainEmptyContent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Dimens.dp16),
+            )
+        }
+
+        state.searchQuery.isNotBlank() && filteredLists.isEmpty() -> {
+            SearchEmptyContent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Dimens.dp16),
+            )
+        }
+
+        else -> {
+            ShoppingListsContent(
+                lists = filteredLists,
+                listActions = listActions
+            )
+            MainScreenDialogs(
+                listState = listState,
+                onListEvent = onListEvent,
+                resetSwipeTrigger = resetSwipeTrigger
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainScreenDialogs(
+    listState: ListState,
+    onListEvent: (ListEvents) -> Unit,
+    resetSwipeTrigger: MutableState<Int>
+) {
+    when {
+        listState.showEditShoppingListDialog -> {
+            RenameListDialog(
+                onDismiss = { onListEvent(ListEvents.HideEditShoppingListDialog) },
+                onCreate = { newName -> onListEvent(ListEvents.SaveNewListName(newName)) },
+                listName = listState.list?.name
+            )
+        }
+
+        listState.showDeleteListDialog -> {
+            DeleteAllListsDialog(
+                onDismiss = {
+                    onListEvent(ListEvents.HideDeleteListDialog)
+                    resetSwipeTrigger.value++
+                },
+                onConfirm = { onListEvent(ListEvents.DeleteList) },
+                deleteOneList = true,
+                listName = listState.list?.name ?: ""
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchEmptyContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.no_list),
+            contentDescription = null,
+            modifier = Modifier.size(200.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.search_not_found_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.search_not_found_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}

@@ -1,0 +1,61 @@
+package ru.ya.practicum.shopper.data.impl
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import ru.ya.practicum.shopper.core.model.Product
+import ru.ya.practicum.shopper.data.converter.ShopperItemMapper
+import ru.ya.practicum.shopper.data.local.dao.ShopperItemDao
+import ru.ya.practicum.shopper.data.local.entity.ProductPositionUpdate
+import ru.ya.practicum.shopper.domain.model.ShopperItem
+import ru.ya.practicum.shopper.domain.repository.ShopperItemRepository
+
+class ShopperItemRepositoryImpl(
+    private val dao: ShopperItemDao,
+    private val mapper: ShopperItemMapper
+) : ShopperItemRepository {
+
+    override suspend fun addItem(item: ShopperItem, listId: Int) {
+        dao.insert(mapper.toEntity(item, listId))
+    }
+
+    override suspend fun deleteItem(item: ShopperItem) {
+        dao.delete(mapper.toEntity(item, item.id))
+    }
+
+    override suspend fun deleteItemById(id: Int) {
+        dao.deleteById(id)
+    }
+
+    override suspend fun updateItem(item: ShopperItem, listId: Int) {
+        dao.update(mapper.toEntity(item, listId))
+    }
+
+    override suspend fun insertItems(items: List<ShopperItem>, listId: Int) {
+        for (item in items) {
+            dao.insert(mapper.toEntity(item, listId))
+        }
+    }
+
+    override fun getAllItems(listId: Int, orderByName: Boolean): Flow<List<ShopperItem>> {
+        val queryResult = if (orderByName) {
+            dao.getItemsOrderedByName(listId)
+        } else {
+            dao.getItems(listId)
+        }
+        return queryResult.map { entities ->
+            entities.map { mapper.toDomain(it) }
+        }
+    }
+
+    override suspend fun deleteAllItemsByListId(listId: Int) {
+        dao.deleteAllByListId(listId)
+    }
+
+    override suspend fun clearBoughtItems(listId: Int) {
+        dao.clearBought(listId)
+    }
+
+    override suspend fun updateProductPositions(products: List<Product>) {
+        dao.updatePositions(products.map { ProductPositionUpdate(it.id, it.position) })
+    }
+}
